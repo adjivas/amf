@@ -12,6 +12,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mitchellh/mapstructure"
+	"github.com/mohae/deepcopy"
+	"github.com/pkg/errors"
+
 	"github.com/free5gc/amf/internal/context"
 	gmm_common "github.com/free5gc/amf/internal/gmm/common"
 	gmm_message "github.com/free5gc/amf/internal/gmm/message"
@@ -31,9 +35,6 @@ import (
 	"github.com/free5gc/openapi/models"
 	Nnrf_NFDiscovery "github.com/free5gc/openapi/nrf/NFDiscovery"
 	"github.com/free5gc/util/fsm"
-	"github.com/mitchellh/mapstructure"
-	"github.com/mohae/deepcopy"
-	"github.com/pkg/errors"
 )
 
 const psiArraySize = 16

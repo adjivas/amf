@@ -5,9 +5,10 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/free5gc/amf/pkg/factory"
 	"github.com/free5gc/openapi/models"
-	"github.com/stretchr/testify/assert"
 )
 
 func createConfigFile(t *testing.T, postContent []byte) *os.File {
@@ -82,13 +83,13 @@ configuration:
 		t.Errorf("can't create temp file: %+v", err)
 	}
 
-	if _, err := configFile.Write(content); err != nil {
+	if _, err = configFile.Write(content); err != nil {
 		t.Errorf("can't write content of temp file: %+v", err)
 	}
-	if _, err := configFile.Write(postContent); err != nil {
+	if _, err = configFile.Write(postContent); err != nil {
 		t.Errorf("can't write content of temp file: %+v", err)
 	}
-	if err := configFile.Close(); err != nil {
+	if err = configFile.Close(); err != nil {
 		t.Fatal(err)
 	}
 	return configFile
@@ -121,7 +122,7 @@ func TestInitAmfContextWithConfigIPv6(t *testing.T) {
 
 	// Close the config file
 	t.Cleanup(func() {
-		if err := os.RemoveAll(configFile.Name()); err != nil {
+		if err = os.RemoveAll(configFile.Name()); err != nil {
 			t.Fatal(err)
 		}
 	})
@@ -153,7 +154,7 @@ func TestInitAmfContextWithConfigIPv4(t *testing.T) {
 
 	// Close the config file
 	t.Cleanup(func() {
-		if err := os.RemoveAll(configFile.Name()); err != nil {
+		if err = os.RemoveAll(configFile.Name()); err != nil {
 			t.Fatal(err)
 		}
 	})
@@ -185,7 +186,7 @@ func TestInitAmfContextWithConfigDeprecated(t *testing.T) {
 
 	// Close the config file
 	t.Cleanup(func() {
-		if err := os.RemoveAll(configFile.Name()); err != nil {
+		if err = os.RemoveAll(configFile.Name()); err != nil {
 			t.Fatal(err)
 		}
 	})
@@ -212,7 +213,7 @@ func TestInitAmfContextWithConfigEmptySBI(t *testing.T) {
 
 	// Close the config file
 	t.Cleanup(func() {
-		if err := os.RemoveAll(configFile.Name()); err != nil {
+		if err = os.RemoveAll(configFile.Name()); err != nil {
 			t.Fatal(err)
 		}
 	})
@@ -241,7 +242,7 @@ func TestInitAmfContextWithConfigMissingRegisterIP(t *testing.T) {
 
 	// Close the config file
 	t.Cleanup(func() {
-		if err := os.RemoveAll(configFile.Name()); err != nil {
+		if err = os.RemoveAll(configFile.Name()); err != nil {
 			t.Fatal(err)
 		}
 	})
@@ -270,7 +271,7 @@ func TestInitAmfContextWithConfigMissingBindingIP(t *testing.T) {
 
 	// Close the config file
 	t.Cleanup(func() {
-		if err := os.RemoveAll(configFile.Name()); err != nil {
+		if err = os.RemoveAll(configFile.Name()); err != nil {
 			t.Fatal(err)
 		}
 	})
@@ -286,8 +287,12 @@ func TestInitAmfContextWithConfigIPv6FromEnv(t *testing.T) {
 
 	configFile := createConfigFile(t, postContent)
 
-	os.Setenv("MY_REGISTER_IP", "2001:db8::1:0:0:130")
-	os.Setenv("MY_BINDING_IP", "2001:db8::1:0:0:130")
+	if err := os.Setenv("MY_REGISTER_IP", "2001:db8::1:0:0:130"); err != nil {
+		t.Errorf("Can't set MY_REGISTER_IP env")
+	}
+	if err := os.Setenv("MY_BINDING_IP", "2001:db8::1:0:0:130"); err != nil {
+		t.Errorf("Can't set MY_BINDING_IP env")
+	}
 
 	// Test the initialization with the config file
 	cfg, err := factory.ReadConfig(configFile.Name())
@@ -305,7 +310,7 @@ func TestInitAmfContextWithConfigIPv6FromEnv(t *testing.T) {
 
 	// Close the config file
 	t.Cleanup(func() {
-		if err := os.RemoveAll(configFile.Name()); err != nil {
+		if err = os.RemoveAll(configFile.Name()); err != nil {
 			t.Fatal(err)
 		}
 	})
