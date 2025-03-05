@@ -1,14 +1,14 @@
 package context
 
 import (
+	"errors"
 	"net/netip"
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/free5gc/amf/pkg/factory"
 	"github.com/free5gc/openapi/models"
+	"github.com/stretchr/testify/assert"
 )
 
 func createConfigFile(t *testing.T, postContent []byte) *os.File {
@@ -16,7 +16,7 @@ func createConfigFile(t *testing.T, postContent []byte) *os.File {
   version: "1.0.9"
 
 logger:
-  level: info
+  level: debug
 
 configuration:
   security:
@@ -198,18 +198,8 @@ func TestInitAmfContextWithConfigEmptySBI(t *testing.T) {
 	configFile := createConfigFile(t, postContent)
 
 	// Test the initialization with the config file
-	cfg, err := factory.ReadConfig(configFile.Name())
-	if err != nil {
-		t.Errorf("invalid read config: %+v %+v", err, cfg)
-	}
-	factory.AmfConfig = cfg
-
-	InitAmfContext(GetSelf())
-
-	assert.Equal(t, amfContext.SBIPort, 8000)
-	assert.Equal(t, amfContext.RegisterIP.String(), "127.0.0.18")
-	assert.Equal(t, amfContext.BindingIP.String(), "127.0.0.18")
-	assert.Equal(t, amfContext.UriScheme, models.UriScheme("https"))
+	_, err := factory.ReadConfig(configFile.Name())
+	assert.Equal(t, err, errors.New("Config validate Error"))
 
 	// Close the config file
 	t.Cleanup(func() {

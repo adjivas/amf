@@ -11,7 +11,6 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	"github.com/davecgh/go-spew/spew"
-
 	"github.com/free5gc/amf/internal/logger"
 	"github.com/free5gc/openapi/models"
 )
@@ -67,7 +66,7 @@ type Configuration struct {
 	AmfName                string            `yaml:"amfName,omitempty" valid:"required, type(string)"`
 	NgapIpList             []string          `yaml:"ngapIpList,omitempty" valid:"required"`
 	NgapPort               int               `yaml:"ngapPort,omitempty" valid:"optional,port"`
-	Sbi                    *Sbi              `yaml:"sbi" valid:"optional"`
+	Sbi                    *Sbi              `yaml:"sbi,omitempty" valid:"required"`
 	ServiceNameList        []string          `yaml:"serviceNameList,omitempty" valid:"required"`
 	ServedGumaiList        []models.Guami    `yaml:"servedGuamiList,omitempty" valid:"required"`
 	SupportTAIList         []models.Tai      `yaml:"supportTaiList,omitempty" valid:"required"`
@@ -118,14 +117,6 @@ func (c *Configuration) validate() (bool, error) {
 	if c.Sbi != nil {
 		if _, err := c.Sbi.validate(); err != nil {
 			return false, err
-		}
-	} else {
-		sbi := Sbi{}
-		result, err := sbi.validate()
-		if err != nil {
-			return result, err
-		} else {
-			c.Sbi = &sbi
 		}
 	}
 
