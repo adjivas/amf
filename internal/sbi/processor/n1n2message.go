@@ -4,8 +4,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
-
 	"github.com/free5gc/amf/internal/context"
 	gmm_message "github.com/free5gc/amf/internal/gmm/message"
 	"github.com/free5gc/amf/internal/logger"
@@ -15,6 +13,7 @@ import (
 	"github.com/free5gc/nas/nasMessage"
 	"github.com/free5gc/ngap/ngapType"
 	"github.com/free5gc/openapi/models"
+	"github.com/gin-gonic/gin"
 )
 
 // TS23502 4.2.3.3, 4.2.4.3, 4.3.2.2, 4.3.2.3, 4.3.3.2, 4.3.7
@@ -292,7 +291,7 @@ func (p *Processor) N1N2MessageTransferProcedure(ueContextID string, reqUri stri
 	} else {
 		n1n2MessageID = n1n2MessageIDTmp
 	}
-	locationHeader = context.GetSelf().GetIPv4Uri() + reqUri + "/" + strconv.Itoa(int(n1n2MessageID))
+	locationHeader = context.GetSelf().GetIPUri() + reqUri + "/" + strconv.Itoa(int(n1n2MessageID))
 
 	// Case A (UE is CM-IDLE in 3GPP access and the associated access type is 3GPP access)
 	// in subclause 5.2.2.3.1.2 of TS29518
@@ -411,7 +410,7 @@ func (p *Processor) N1N2MessageTransferStatusProcedure(ueContextID string,
 	ue.Lock.Lock()
 	defer ue.Lock.Unlock()
 
-	resourceUri := amfSelf.GetIPv4Uri() + reqUri
+	resourceUri := amfSelf.GetIPUri() + reqUri
 	n1n2Message := ue.N1N2Message
 	if n1n2Message == nil || n1n2Message.ResourceUri != resourceUri {
 		problemDetails := &models.ProblemDetails{

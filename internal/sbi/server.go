@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/netip"
 	"runtime/debug"
 	"sync"
 	"time"
-
-	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 
 	amf_context "github.com/free5gc/amf/internal/context"
 	"github.com/free5gc/amf/internal/logger"
@@ -22,6 +20,8 @@ import (
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/util/httpwrapper"
 	logger_util "github.com/free5gc/util/logger"
+	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -51,8 +51,12 @@ func NewServer(amf ServerAmf, tlsKeyLogPath string) (*Server, error) {
 
 	s.router = newRouter(s)
 
-	cfg := s.Config()
-	bindAddr := cfg.GetSbiBindingAddr()
+	amf_context.InitAmfContext(amf.Context())
+
+	port := amf.Context().SBIPort
+	addr := amf.Context().BindingIP
+	bindAddr := netip.AddrPortFrom(addr, uint16(port)).String()
+
 	logger.SBILog.Infof("Binding addr: [%s]", bindAddr)
 	var err error
 	if s.httpServer, err = httpwrapper.NewHttp2Server(bindAddr, tlsKeyLogPath, s.router); err != nil {

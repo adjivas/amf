@@ -5,15 +5,12 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"net"
 	"net/http"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/mitchellh/mapstructure"
-	"github.com/mohae/deepcopy"
-	"github.com/pkg/errors"
 
 	"github.com/free5gc/amf/internal/context"
 	gmm_common "github.com/free5gc/amf/internal/gmm/common"
@@ -34,6 +31,9 @@ import (
 	"github.com/free5gc/openapi/models"
 	Nnrf_NFDiscovery "github.com/free5gc/openapi/nrf/NFDiscovery"
 	"github.com/free5gc/util/fsm"
+	"github.com/mitchellh/mapstructure"
+	"github.com/mohae/deepcopy"
+	"github.com/pkg/errors"
 )
 
 const psiArraySize = 16
@@ -127,7 +127,7 @@ func transport5GSMMessage(ue *context.AmfUe, anType models.AccessType,
 					Release: true,
 					Cause:   models.SmfPduSessionCause_REL_DUE_TO_DUPLICATE_SESSION_ID,
 					SmContextStatusUri: fmt.Sprintf("%s"+factory.AmfCallbackResUriPrefix+"/smContextStatus/%s/%d",
-						ue.ServingAMF().GetIPv4Uri(), ue.Guti, pduSessionID),
+						ue.ServingAMF().GetIPUri(), ue.Guti, pduSessionID),
 				}
 				ue.GmmLog.Warningf("Duplicated PDU session ID[%d]", pduSessionID)
 				smContext.SetDuplicatedPduSessionID(true)
@@ -1210,20 +1210,40 @@ func handleRequestedNssai(ue *context.AmfUe, anType models.AccessType) error {
 				// Condition (A) Step 7: initial AMF find Target AMF via NRF ->
 				// Send Namf_Communication_N1MessageNotify to Target AMF
 				ueContext := consumer.GetConsumer().BuildUeContextModel(ue)
-				registerContext := models.RegistrationContextContainer{
-					UeContext:        &ueContext,
-					AnType:           anType,
-					AnN2ApId:         int32(ue.RanUe[anType].RanUeNgapId),
-					RanNodeId:        ue.RanUe[anType].Ran.RanId,
-					InitialAmfName:   amfSelf.Name,
-					UserLocation:     &ue.Location,
-					RrcEstCause:      ue.RanUe[anType].RRCEstablishmentCause,
-					UeContextRequest: ue.RanUe[anType].UeContextRequest,
-					AnN2IPv4Addr:     ue.RanUe[anType].Ran.Conn.RemoteAddr().String(),
-					AllowedNssai: &models.AllowedNssai{
-						AllowedSnssaiList: ue.AllowedNssai[anType],
-						AccessType:        anType,
-					},
+				var anN2IPAddr net.Addr = ue.RanUe[anType].Ran.Conn.RemoteAddr()
+				var registerContext models.RegistrationContextContainer
+				if anN2IPv6Addr := anN2IPAddr.(*net.IPNet).IP.To16(); anN2IPv6Addr != nil {
+					registerContext = models.RegistrationContextContainer{
+						UeContext:        &ueContext,
+						AnType:           anType,
+						AnN2ApId:         int32(ue.RanUe[anType].RanUeNgapId),
+						RanNodeId:        ue.RanUe[anType].Ran.RanId,
+						InitialAmfName:   amfSelf.Name,
+						UserLocation:     &ue.Location,
+						RrcEstCause:      ue.RanUe[anType].RRCEstablishmentCause,
+						UeContextRequest: ue.RanUe[anType].UeContextRequest,
+						AnN2IPv6Addr:     ue.RanUe[anType].Ran.Conn.RemoteAddr().String(),
+						AllowedNssai: &models.AllowedNssai{
+							AllowedSnssaiList: ue.AllowedNssai[anType],
+							AccessType:        anType,
+						},
+					}
+				} else if anN2IPv4Addr := anN2IPAddr.(*net.IPNet).IP.To4(); anN2IPv4Addr != nil {
+					registerContext = models.RegistrationContextContainer{
+						UeContext:        &ueContext,
+						AnType:           anType,
+						AnN2ApId:         int32(ue.RanUe[anType].RanUeNgapId),
+						RanNodeId:        ue.RanUe[anType].Ran.RanId,
+						InitialAmfName:   amfSelf.Name,
+						UserLocation:     &ue.Location,
+						RrcEstCause:      ue.RanUe[anType].RRCEstablishmentCause,
+						UeContextRequest: ue.RanUe[anType].UeContextRequest,
+						AnN2IPv4Addr:     ue.RanUe[anType].Ran.Conn.RemoteAddr().String(),
+						AllowedNssai: &models.AllowedNssai{
+							AllowedSnssaiList: ue.AllowedNssai[anType],
+							AccessType:        anType,
+						},
+					}
 				}
 				if len(ue.NetworkSliceInfo.RejectedNssaiInPlmn) > 0 {
 					registerContext.RejectedNssaiInPlmn = ue.NetworkSliceInfo.RejectedNssaiInPlmn
