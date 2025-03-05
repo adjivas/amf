@@ -118,6 +118,14 @@ func (c *Configuration) validate() (bool, error) {
 		if _, err := c.Sbi.validate(); err != nil {
 			return false, err
 		}
+	} else {
+		sbi := Sbi{}
+		result, err := sbi.validate()
+		if err != nil {
+			return result, err
+		} else {
+			c.Sbi = &sbi
+		}
 	}
 
 	if c.ServiceNameList != nil {
