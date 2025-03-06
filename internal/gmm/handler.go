@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/netip"
 	"reflect"
 	"strconv"
 	"strings"
@@ -1211,9 +1212,15 @@ func handleRequestedNssai(ue *context.AmfUe, anType models.AccessType) error {
 				// Condition (A) Step 7: initial AMF find Target AMF via NRF ->
 				// Send Namf_Communication_N1MessageNotify to Target AMF
 				ueContext := consumer.GetConsumer().BuildUeContextModel(ue)
-				var anN2IPAddr net.Addr = ue.RanUe[anType].Ran.Conn.RemoteAddr()
+
 				var registerContext models.RegistrationContextContainer
-				if anN2IPv6Addr := anN2IPAddr.(*net.IPNet).IP.To16(); anN2IPv6Addr != nil {
+				AnN2IPAddr := ue.RanUe[anType].Ran.Conn.RemoteAddr().String()
+				ran_host, _, ran_err := net.SplitHostPort(AnN2IPAddr)
+				if ran_err != nil {
+					logger.GmmLog.Errorf("Can't split AnN2IPAddr %+v", ran_err)
+				}
+				ran_addr := netip.MustParseAddr(ran_host)
+				if ran_addr.Is6() {
 					registerContext = models.RegistrationContextContainer{
 						UeContext:        &ueContext,
 						AnType:           anType,
@@ -1223,13 +1230,13 @@ func handleRequestedNssai(ue *context.AmfUe, anType models.AccessType) error {
 						UserLocation:     &ue.Location,
 						RrcEstCause:      ue.RanUe[anType].RRCEstablishmentCause,
 						UeContextRequest: ue.RanUe[anType].UeContextRequest,
-						AnN2IPv6Addr:     ue.RanUe[anType].Ran.Conn.RemoteAddr().String(),
+						AnN2IPv6Addr:     AnN2IPAddr,
 						AllowedNssai: &models.AllowedNssai{
 							AllowedSnssaiList: ue.AllowedNssai[anType],
 							AccessType:        anType,
 						},
 					}
-				} else if anN2IPv4Addr := anN2IPAddr.(*net.IPNet).IP.To4(); anN2IPv4Addr != nil {
+				} else if ran_addr.Is4() {
 					registerContext = models.RegistrationContextContainer{
 						UeContext:        &ueContext,
 						AnType:           anType,
@@ -1239,7 +1246,7 @@ func handleRequestedNssai(ue *context.AmfUe, anType models.AccessType) error {
 						UserLocation:     &ue.Location,
 						RrcEstCause:      ue.RanUe[anType].RRCEstablishmentCause,
 						UeContextRequest: ue.RanUe[anType].UeContextRequest,
-						AnN2IPv4Addr:     ue.RanUe[anType].Ran.Conn.RemoteAddr().String(),
+						AnN2IPv4Addr:     AnN2IPAddr,
 						AllowedNssai: &models.AllowedNssai{
 							AllowedSnssaiList: ue.AllowedNssai[anType],
 							AccessType:        anType,
