@@ -343,3 +343,179 @@ func TestResolveIPv6(t *testing.T) {
 		t.Errorf("invalid IP: %+v", addr)
 	}
 }
+
+func TestInitAmfContextWithConfigEirCheckingEnabled(t *testing.T) {
+	postContent := []byte(`
+  imei:
+    checking: enabled
+  sbi:
+    scheme: http
+    registerIP: "127.0.0.13"
+    bindingIP: "127.0.0.13"
+    port: 8000`)
+
+	configFile := createConfigFile(t, postContent)
+
+	// Test the initialization with the config file
+	cfg, err := factory.ReadConfig(configFile.Name())
+	if err != nil {
+		t.Errorf("invalid read config: %+v %+v", err, cfg)
+	}
+	factory.AmfConfig = cfg
+
+	InitAmfContext(GetSelf())
+
+	assert.Equal(t, amfContext.IMEIChecking, "enabled")
+
+	// Close the config file
+	t.Cleanup(func() {
+		if err = os.RemoveAll(configFile.Name()); err != nil {
+			t.Fatal(err)
+		}
+	})
+}
+
+func TestInitAmfContextWithConfigEirCheckingMandatory(t *testing.T) {
+	postContent := []byte(`
+  imei:
+    checking: mandatory
+  sbi:
+    scheme: http
+    registerIP: "127.0.0.13"
+    bindingIP: "127.0.0.13"
+    port: 8000`)
+
+	configFile := createConfigFile(t, postContent)
+
+	// Test the initialization with the config file
+	cfg, err := factory.ReadConfig(configFile.Name())
+	if err != nil {
+		t.Errorf("invalid read config: %+v %+v", err, cfg)
+	}
+	factory.AmfConfig = cfg
+
+	InitAmfContext(GetSelf())
+
+	assert.Equal(t, amfContext.IMEIChecking, "mandatory")
+
+	// Close the config file
+	t.Cleanup(func() {
+		if err = os.RemoveAll(configFile.Name()); err != nil {
+			t.Fatal(err)
+		}
+	})
+}
+
+func TestInitAmfContextWithConfigEirCheckingDisabled(t *testing.T) {
+	postContent := []byte(`
+  imei:
+    checking: disabled
+  sbi:
+    scheme: http
+    registerIP: "127.0.0.13"
+    bindingIP: "127.0.0.13"
+    port: 8000`)
+
+	configFile := createConfigFile(t, postContent)
+
+	// Test the initialization with the config file
+	cfg, err := factory.ReadConfig(configFile.Name())
+	if err != nil {
+		t.Errorf("invalid read config: %+v %+v", err, cfg)
+	}
+	factory.AmfConfig = cfg
+
+	InitAmfContext(GetSelf())
+
+	assert.Equal(t, amfContext.IMEIChecking, "disabled")
+
+	// Close the config file
+	t.Cleanup(func() {
+		if err = os.RemoveAll(configFile.Name()); err != nil {
+			t.Fatal(err)
+		}
+	})
+}
+
+func TestInitAmfContextWithConfigEirMissing(t *testing.T) {
+	postContent := []byte(`
+  sbi:
+    scheme: http
+    registerIP: "127.0.0.13"
+    bindingIP: "127.0.0.13"
+    port: 8000`)
+
+	configFile := createConfigFile(t, postContent)
+
+	// Test the initialization with the config file
+	cfg, err := factory.ReadConfig(configFile.Name())
+	if err != nil {
+		t.Errorf("invalid read config: %+v %+v", err, cfg)
+	}
+	factory.AmfConfig = cfg
+
+	InitAmfContext(GetSelf())
+
+	assert.Equal(t, amfContext.IMEIChecking, "disabled")
+
+	// Close the config file
+	t.Cleanup(func() {
+		if err = os.RemoveAll(configFile.Name()); err != nil {
+			t.Fatal(err)
+		}
+	})
+}
+
+func TestInitAmfContextWithConfigEirEmpty(t *testing.T) {
+	postContent := []byte(`
+  imei:
+  sbi:
+    scheme: http
+    registerIP: "127.0.0.13"
+    bindingIP: "127.0.0.13"
+    port: 8000`)
+
+	configFile := createConfigFile(t, postContent)
+
+	// Test the initialization with the config file
+	cfg, err := factory.ReadConfig(configFile.Name())
+	if err != nil {
+		t.Errorf("invalid read config: %+v %+v", err, cfg)
+	}
+	factory.AmfConfig = cfg
+
+	InitAmfContext(GetSelf())
+
+	assert.Equal(t, amfContext.IMEIChecking, "disabled")
+
+	// Close the config file
+	t.Cleanup(func() {
+		if err = os.RemoveAll(configFile.Name()); err != nil {
+			t.Fatal(err)
+		}
+	})
+}
+
+func TestInitAmfContextWithConfigEirWrongChecking(t *testing.T) {
+	postContent := []byte(`
+  imei:
+    checking: mandat
+  sbi:
+    scheme: http
+    registerIP: "127.0.0.13"
+    bindingIP: "127.0.0.13"
+    port: 8000`)
+
+	configFile := createConfigFile(t, postContent)
+
+	// Test the initialization with the config file
+	_, err := factory.ReadConfig(configFile.Name())
+	assert.Equal(t, err, errors.New("Config validate Error"))
+
+	// Close the config file
+	t.Cleanup(func() {
+		if err = os.RemoveAll(configFile.Name()); err != nil {
+			t.Fatal(err)
+		}
+	})
+}
