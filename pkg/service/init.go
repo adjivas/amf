@@ -6,6 +6,7 @@ import (
 	"os"
 	"runtime/debug"
 	"sync"
+	// "net/netip"
 
 	"github.com/sirupsen/logrus"
 
@@ -21,6 +22,8 @@ import (
 	"github.com/free5gc/amf/pkg/app"
 	"github.com/free5gc/amf/pkg/factory"
 	"github.com/free5gc/openapi/models"
+	Nnrf_NFDiscovery "github.com/free5gc/openapi/nrf/NFDiscovery"
+	Nnrf_NFManagement "github.com/free5gc/openapi/nrf/NFManagement"
 )
 
 type AmfAppInterface interface {
@@ -138,11 +141,51 @@ func (a *AmfApp) Start() {
 	go a.listenShutdownEvent()
 
 	var profile models.NrfNfManagementNfProfile
-	if profileTmp, err1 := a.Consumer().BuildNFInstance(self); err1 != nil {
+	if profileTmp, err := a.Consumer().BuildNFInstance(self); err != nil {
 		logger.InitLog.Error("Build AMF Profile Error")
 	} else {
 		profile = profileTmp
 	}
+
+	// Init Eir
+	if a.Context().IMEIChecking == "enabled" || a.Context().IMEIChecking == "mandatory" {
+		eir, err := a.SearchEirInstance()
+		prefix := eir.NfServices[0].ApiPrefix
+		if err != nil {
+			logger.MainLog.Fatalf("Search Eir instance failed %+v", err)
+		} else {
+			a.Context().IMEIApiPrefix = prefix
+			logger.InitLog.Infof("Select the Eir instance [%+v]", prefix)
+		}
+		// port := a.Context().SBIPort
+		// addr := a.Context().BindingIP
+		// bindAddr := netip.AddrPortFrom(addr, uint16(port)).String()
+		bindAddr := "http://127.0.0.18/namf-loc/v1";
+
+		// Subscription Eir Event
+		subscriptionData := Nnrf_NFManagement.CreateSubscriptionRequest {
+			NrfNfManagementSubscriptionData: &models.NrfNfManagementSubscriptionData {
+				NfStatusNotificationUri: bindAddr,
+				SubscrCond: &models.SubscrCond {
+					NfType: string(eir.NfType),
+					ServiceName: models.ServiceName_N5G_EIR_EIC,
+					NfInstanceId: eir.NfInstanceId,
+				},
+			},
+		}
+		logger.MainLog.Infof("ADJIVAS subscriptionData %+v", bindAddr)
+		uri := a.Context().NrfUri
+		configuration := Nnrf_NFManagement.NewConfiguration()
+		configuration.SetBasePath(uri)
+		client := Nnrf_NFManagement.NewAPIClient(configuration)
+		response, err := client.SubscriptionsCollectionApi.CreateSubscription(context.TODO(), &subscriptionData)
+		if err != nil {
+			logger.MainLog.Fatalf("Send Subscriptions nRF Eir failed %+v", err)
+		} else {
+			logger.InitLog.Infof("Registered Subscriptions nRF Eir %+v", response.NrfNfManagementSubscriptionData.SubscriptionId)
+		}
+	}
+
 	_, nfId, err_reg := a.Consumer().SendRegisterNFInstance(a.ctx, a.Context().NrfUri, a.Context().NfId, &profile)
 	if err_reg != nil {
 		logger.InitLog.Warnf("Send Register NF Instance failed: %+v", err_reg)
@@ -154,6 +197,26 @@ func (a *AmfApp) Start() {
 		logger.MainLog.Fatalf("Run SBI server failed: %+v", err)
 	}
 	a.WaitRoutineStopped()
+}
+
+func (a *AmfApp) SearchEirInstance() (models.NrfNfDiscoveryNfProfile, error) {
+	NrfUri := a.Context().NrfUri
+	param := Nnrf_NFDiscovery.SearchNFInstancesRequest{ }
+	resp, err := a.consumer.SendSearchNFInstances(NrfUri, models.NrfNfManagementNfType__5_G_EIR, models.NrfNfManagementNfType_AMF, &param)
+
+	if err != nil {
+		logger.MainLog.Fatalf("Send Search NF Instances 5_G_EIR failed: %+v", err)
+		return models.NrfNfDiscoveryNfProfile{}, err
+	}
+
+	// select the first EIR
+	for index := range resp.NfInstances {
+		return resp.NfInstances[index], nil
+		// for ind := range resp.NfInstances[index].NfServices {
+			// return resp.NfInstances[index].NfServices[ind], nil
+		// }
+	}
+	return models.NrfNfDiscoveryNfProfile{}, nil
 }
 
 // Used in AMF planned removal procedure

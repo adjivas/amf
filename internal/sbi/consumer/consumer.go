@@ -77,6 +77,7 @@ func NewConsumer(amf ConsumerAmf) (*Consumer, error) {
 		consumer:                c,
 		UEAuthenticationClients: make(map[string]*Nausf_UEAuthentication.APIClient),
 	}
+
 	consumer = c
 	return c, nil
 }

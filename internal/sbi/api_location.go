@@ -29,6 +29,12 @@ func (s *Server) getLocationRoutes() []Route {
 			},
 		},
 		{
+			Name:    "EventEir",
+			Method:  http.MethodPost,
+			Pattern: "/nnrf-nfm/v1",
+			APIFunc: s.HTTPEventEir,
+		},
+		{
 			Name:    "ProvideLocationInfo",
 			Method:  http.MethodPost,
 			Pattern: "/:ueContextId/provide-loc-info",
@@ -47,6 +53,47 @@ func (s *Server) getLocationRoutes() []Route {
 			APIFunc: s.HTTPCancelLocation,
 		},
 	}
+}
+
+func (s *Server) HTTPEventEir(c *gin.Context) {
+	var requestNotificationData models.NrfNfManagementNotificationData
+
+	requestBody, err := c.GetRawData()
+	if err != nil {
+		problemDetail := models.ProblemDetails{
+			Title:  "System failure",
+			Status: http.StatusInternalServerError,
+			Detail: err.Error(),
+			Cause:  "SYSTEM_FAILURE",
+		}
+		logger.LocationLog.Errorf("Get Request Body error: %+v", err)
+		c.JSON(http.StatusInternalServerError, problemDetail)
+		return
+	}
+
+	err = openapi.Deserialize(&requestNotificationData, requestBody, "application/json")
+	if err != nil {
+		problemDetail := "[Request Body] " + err.Error()
+		rsp := models.ProblemDetails{
+			Title:  "Malformed request syntax",
+			Status: http.StatusBadRequest,
+			Detail: problemDetail,
+		}
+		logger.LocationLog.Errorln(problemDetail)
+		c.JSON(http.StatusBadRequest, rsp)
+		return
+	}
+	
+	event := requestNotificationData.Event
+	if event == "NF_DEREGISTERED" {
+		logger.MainLog.Infof("ADJIVAS NF_DEREGISTERED %+v", requestNotificationData.NfInstanceUri)
+		s.ServerAmf.Context().IMEIApiPrefix = ""
+	} else if event == "NF_REGISTERED" {
+		logger.MainLog.Infof("ADJIVAS NF_REGISTERED %+v", requestNotificationData.NfInstanceUri)
+		s.ServerAmf.Context().IMEIApiPrefix = requestNotificationData.NfInstanceUri
+	}
+
+	c.JSON(http.StatusNoContent, nil)
 }
 
 // ProvideLocationInfo - Namf_Location ProvideLocationInfo service Operation

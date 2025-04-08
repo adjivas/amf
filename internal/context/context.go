@@ -67,6 +67,7 @@ type AMFContext struct {
 	NfId                         string
 	Name                         string
 	NfService                    map[models.ServiceName]models.NrfNfManagementNfService // nfservice that amf support
+	IMEIApiPrefix                string
 	IMEIChecking                 string
 	UriScheme                    models.UriScheme
 	BindingIP                    netip.Addr
@@ -601,6 +602,7 @@ func (context *AMFContext) Reset() {
 	context.NrfUri = ""
 	context.NrfCertPem = ""
 	context.OAuth2Required = false
+	context.IMEIApiPrefix = ""
 }
 
 // Create new AMF context
