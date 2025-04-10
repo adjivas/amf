@@ -6,7 +6,7 @@ configuration:
   amfName: AMF # the name of this AMF
   ngapIpList:  # the IP list of N2 interfaces on this AMF
     - 127.0.0.18
-  ngapPort: 80 # the SCTP port listened by NGAP
+  ngapPort: 38412 # the SCTP port listened by NGAP
 
   # EIR
   imei:
@@ -18,8 +18,8 @@ configuration:
     scheme: http # the protocol for sbi (http or https)
     registerIP: 127.0.0.18 # IP used to register to NRF
     bindingIP: 127.0.0.18  # IP used to bind the service
-    port: 80 # port used to bind the service
-    # port: 8000 # port used to bind the service
+    # port: 80 # port used to bind the service
+    port: 8000 # port used to bind the service
     tls: # the local path of TLS key
       pem: cert/amf.pem # AMF TLS Certificate
       key: cert/amf.key # AMF TLS Private key

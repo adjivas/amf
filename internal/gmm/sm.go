@@ -307,6 +307,12 @@ func SecurityMode(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
 			amfUe.GmmLog.Errorf("state mismatch: receieve gmm message[message type 0x%0x] at %s state",
 				gmmMessage.GetMessageType(), state.Current())
 		}
+		logger.GmmLog.Infof("ADJIVAS SecurityMode GmmMessageEvent PEI/IMEISV [%+v]", amfUe.Pei)
+		logger.GmmLog.Infof("ADJIVAS SecurityMode GmmMessageEvent IMEIApiPrefix [%+v]", amfUe.ServingAMF().IMEIApiPrefix)
+		logger.GmmLog.Infof("ADJIVAS SecurityMode GmmMessageEvent IMEIChecking [%+v]", amfUe.ServingAMF().IMEIChecking)
+
+		// ADJIVAS TODO add EIR Checks
+
 	case SecurityModeSuccessEvent:
 		logger.GmmLog.Debugln(event)
 	case SecurityModeFailEvent:

@@ -2284,7 +2284,6 @@ func HandleSecurityModeComplete(ue *context.AmfUe, anType models.AccessType, pro
 			ue.Pei = pei
 		}
 	}
-
 	// TODO: AMF shall set the NAS COUNTs to zero if horizontal derivation of KAMF is performed
 	if securityModeComplete.NASMessageContainer != nil {
 		contents := securityModeComplete.NASMessageContainer.GetNASMessageContainerContents()

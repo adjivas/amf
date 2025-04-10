@@ -150,17 +150,20 @@ func (a *AmfApp) Start() {
 	// Init Eir
 	if a.Context().IMEIChecking == "enabled" || a.Context().IMEIChecking == "mandatory" {
 		eir, err := a.SearchEirInstance()
-		prefix := eir.NfServices[0].ApiPrefix
 		if err != nil {
 			logger.MainLog.Fatalf("Search Eir instance failed %+v", err)
+		} else if eir.NfServices == nil {
+			logger.MainLog.Warnln("Not any Eir instance was found")
 		} else {
+			prefix := eir.NfServices[0].ApiPrefix
 			a.Context().IMEIApiPrefix = prefix
 			logger.InitLog.Infof("Select the Eir instance [%+v]", prefix)
 		}
 		// port := a.Context().SBIPort
 		// addr := a.Context().BindingIP
 		// bindAddr := netip.AddrPortFrom(addr, uint16(port)).String()
-		bindAddr := "http://127.0.0.18/namf-loc/v1";
+		// bindAddr := "http://127.0.0.18/namf-loc/v1";
+		bindAddr := "http://127.0.0.18:8000/namf-loc/v1";
 
 		// Subscription Eir Event
 		subscriptionData := Nnrf_NFManagement.CreateSubscriptionRequest {
