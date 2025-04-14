@@ -3,14 +3,9 @@ package service
 import (
 	"context"
 	"io"
-	"fmt"
 	"os"
 	"runtime/debug"
 	"sync"
-	"net/url"
-	"strings"
-	"github.com/free5gc/openapi"
-	"net/netip"
 
 	"github.com/sirupsen/logrus"
 
@@ -132,65 +127,6 @@ type EirResponseData struct {
 	Status string `json:"status"`
 }
 
-func (a *AmfApp) adjivas_request_eir() (EirResponseData, error) {
-	uri := a.Context().IMEIApiPrefix
-	configuration := Nnrf_NFManagement.NewConfiguration()
-	configuration.SetBasePath(uri)
-	logger.GmmLog.Infof("ADJIVAS adjivas_request_eir uri %+v", uri)
-
-	localVarPath := "http://127.0.0.7:8000/n5g-eir-eic/v1/equipement-status?pei=imei-012345678901234"
-	logger.GmmLog.Infof("ADJIVAS adjivas_request_eir %+v", localVarPath)
-	
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	localVarFormParams := url.Values{}
-	
-	localVarHTTPHeaderAccepts := []string{"application/json", "application/problem+json"}
-	localVarHTTPHeaderAccept := strings.Join(localVarHTTPHeaderAccepts, ", ")
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-	
-	// body params
-	r, err := openapi.PrepareRequest(a.ctx, configuration, localVarPath, "GET", nil, localVarHeaderParams, localVarQueryParams, localVarFormParams, "", "", nil)
-	if err != nil {
-		logger.GmmLog.Infof("ADJIVAS err %+v", err)
-		return EirResponseData {}, err
-	}
-	
-	localVarHTTPResponse, err := openapi.CallAPI(configuration, r)
-	if err != nil || localVarHTTPResponse == nil {
-		logger.GmmLog.Warnf("ADJIVAS err %+v", err)
-		return EirResponseData {}, err
-	}
-
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
-	if err != nil {
-		logger.GmmLog.Warnf("ADJIVAS err %+v", err)
-		return EirResponseData {}, err
-	}
-	err = localVarHTTPResponse.Body.Close()
-	if err != nil {
-		logger.GmmLog.Warnf("ADJIVAS err %+v", err)
-		return EirResponseData {}, err
-	}
-
-	var requestProblemDetails models.ProblemDetails
-	errProblemDetails := openapi.Deserialize(&requestProblemDetails, localVarBody, "application/json")
-	if errProblemDetails == nil {
-		logger.GmmLog.Warnf("ADJIVAS err %+v", err)
-		return EirResponseData {}, errProblemDetails
-	}
-
-	var requestResponseData EirResponseData 
-	errResponseData := openapi.Deserialize(&requestResponseData, localVarBody, "application/json")
-	if errResponseData == nil {
-		logger.GmmLog.Infof("ADJIVAS adjivas_request_eir Status %+v", requestResponseData.Status)
-		return requestResponseData, nil
-	}
-	return EirResponseData {}, errResponseData
-}
-
 func (a *AmfApp) Start() {
 	self := a.Context()
 	amf_context.InitAmfContext(self)
@@ -226,43 +162,11 @@ func (a *AmfApp) Start() {
 			a.Context().IMEIApiPrefix = prefix
 			logger.InitLog.Infof("Select the Eir instance [%+v]", prefix)
 		}
-		port := a.Context().SBIPort
-		addr := a.Context().BindingIP
-		scheme := a.Context().UriScheme
-		bindAddr := netip.AddrPortFrom(addr, uint16(port)).String()
-		uriAmf := fmt.Sprintf("%s://%s", scheme, bindAddr)
-		logger.InitLog.Infof("ADJIVAS bindAddr TEST [%+v]", uriAmf)
-
-		// bindAddr = "http://127.0.0.18:8000";
-		// logger.InitLog.Infof("ADJIVAS bindAddr [%+v]", bindAddr)
-
-		// Subscription Eir Event
-		subscriptionData := Nnrf_NFManagement.CreateSubscriptionRequest {
-			NrfNfManagementSubscriptionData: &models.NrfNfManagementSubscriptionData {
-				NfStatusNotificationUri: uriAmf + "/namf-loc/v1",
-				SubscrCond: &models.SubscrCond {
-					NfType: string(eir.NfType),
-					ServiceName: models.ServiceName_N5G_EIR_EIC,
-					NfInstanceId: eir.NfInstanceId,
-				},
-			},
-		}
-		uri := a.Context().NrfUri
-		configuration := Nnrf_NFManagement.NewConfiguration()
-		configuration.SetBasePath(uri)
-		client := Nnrf_NFManagement.NewAPIClient(configuration)
 		
-		response, err := client.SubscriptionsCollectionApi.CreateSubscription(context.TODO(), &subscriptionData)
-		if err != nil {
-			logger.MainLog.Fatalf("Send Subscriptions nRF Eir failed %+v", err)
-		} else {
-			logger.InitLog.Infof("Registered Subscriptions nRF Eir %+v", response.NrfNfManagementSubscriptionData.SubscriptionId)
-			a.eirSubscriptionID = response.NrfNfManagementSubscriptionData.SubscriptionId
-		}
+		uriAmf := a.Context().GetIPUri()
+		logger.InitLog.Infof("Binding addr: [%+v]", uriAmf)
 
-		// ADJIVAS Test
-		statusTest, _ := a.adjivas_request_eir() // Test
-		logger.InitLog.Warnf("EIR status test [%+v]", statusTest)
+		a.createSubscriptionProcedure(eir, uriAmf)
 	}
 
 	_, nfId, err_reg := a.Consumer().SendRegisterNFInstance(a.ctx, a.Context().NrfUri, a.Context().NfId, &profile)
@@ -288,14 +192,54 @@ func (a *AmfApp) SearchEirInstance() (models.NrfNfDiscoveryNfProfile, error) {
 		return models.NrfNfDiscoveryNfProfile{}, err
 	}
 
-	// select the first EIR
 	for index := range resp.NfInstances {
 		return resp.NfInstances[index], nil
-		// for ind := range resp.NfInstances[index].NfServices {
-			// return resp.NfInstances[index].NfServices[ind], nil
-		// }
 	}
 	return models.NrfNfDiscoveryNfProfile{}, nil
+}
+
+func (a *AmfApp) createSubscriptionProcedure(eir models.NrfNfDiscoveryNfProfile, uriAmf string) {
+	subscriptionData := Nnrf_NFManagement.CreateSubscriptionRequest {
+		NrfNfManagementSubscriptionData: &models.NrfNfManagementSubscriptionData {
+			NfStatusNotificationUri: uriAmf + "/namf-loc/v1",
+			SubscrCond: &models.SubscrCond {
+				NfType: string(eir.NfType),
+				ServiceName: models.ServiceName_N5G_EIR_EIC,
+				NfInstanceId: eir.NfInstanceId,
+			},
+		},
+	}
+	uri := a.Context().NrfUri
+	configuration := Nnrf_NFManagement.NewConfiguration()
+	configuration.SetBasePath(uri)
+	client := Nnrf_NFManagement.NewAPIClient(configuration)
+	
+	response, err := client.SubscriptionsCollectionApi.CreateSubscription(context.TODO(), &subscriptionData)
+	if err != nil {
+		logger.MainLog.Fatalf("Send Subscriptions nRF Eir failed %+v", err)
+	} else {
+		logger.InitLog.Infof("Registered Subscriptions nRF Eir %+v", response.NrfNfManagementSubscriptionData.SubscriptionId)
+		a.eirSubscriptionID = response.NrfNfManagementSubscriptionData.SubscriptionId
+	}
+}
+
+func (a *AmfApp) removeSubscriptionProcedure() {
+	if eirSubscriptionID := a.eirSubscriptionID; eirSubscriptionID != "" {
+		uri := a.Context().NrfUri
+		configuration := Nnrf_NFManagement.NewConfiguration()
+		configuration.SetBasePath(uri)
+		client := Nnrf_NFManagement.NewAPIClient(configuration)
+
+		request := Nnrf_NFManagement.RemoveSubscriptionRequest {
+			SubscriptionID: &eirSubscriptionID,
+		}
+		response, err := client.SubscriptionIDDocumentApi.RemoveSubscription(context.TODO(), &request)
+		if err != nil {
+			logger.MainLog.Fatalf("Send RemoveSubscription nRF Eir failed %+v", err)
+		} else {
+			logger.InitLog.Infof("RemoveSubscription nRF Eir %+v", response)
+		}
+	}
 }
 
 // Used in AMF planned removal procedure
@@ -345,25 +289,6 @@ func (a *AmfApp) CallServerStop() {
 func (a *AmfApp) WaitRoutineStopped() {
 	a.wg.Wait()
 	logger.MainLog.Infof("AMF App is terminated")
-}
-
-func (a *AmfApp) removeSubscriptionProcedure() {
-	if eirSubscriptionID := a.eirSubscriptionID; eirSubscriptionID != "" {
-		uri := a.Context().NrfUri
-		configuration := Nnrf_NFManagement.NewConfiguration()
-		configuration.SetBasePath(uri)
-		client := Nnrf_NFManagement.NewAPIClient(configuration)
-
-		request := Nnrf_NFManagement.RemoveSubscriptionRequest {
-			SubscriptionID: &eirSubscriptionID,
-		}
-		response, err := client.SubscriptionIDDocumentApi.RemoveSubscription(context.TODO(), &request)
-		if err != nil {
-			logger.MainLog.Fatalf("Send RemoveSubscription nRF Eir failed %+v", err)
-		} else {
-			logger.InitLog.Infof("RemoveSubscription nRF Eir %+v", response)
-		}
-	}
 }
 
 func (a *AmfApp) terminateProcedure() {

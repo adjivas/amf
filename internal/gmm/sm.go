@@ -313,16 +313,11 @@ func SecurityMode(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
 				gmmMessage.GetMessageType(), state.Current())
 		}
 
-		logger.GmmLog.Infof("ADJIVAS SecurityMode GmmMessageEvent PEI/IMEISV [%+v]", amfUe.Pei)
-		logger.GmmLog.Infof("ADJIVAS SecurityMode GmmMessageEvent IMEIApiPrefix [%+v]", amfUe.ServingAMF().IMEIApiPrefix)
-		logger.GmmLog.Infof("ADJIVAS SecurityMode GmmMessageEvent IMEIChecking [%+v]", amfUe.ServingAMF().IMEIChecking)
-
-		// context.GetSelf().IMEIApiPrefix
-		// ADJIVAS add EIR Checks
+		// ADJIVAS TODO replaces `nasMessage.Cause5GMMUESecurityCapabilitiesMismatch` by right 3GPP value
 		if imeiChecking := amfUe.ServingAMF().IMEIChecking; imeiChecking != "" {
-			eirResponseData, eirError := adjivas_request_eir(amfUe.ServingAMF().IMEIApiPrefix, amfUe.Pei)
+			eirResponseData, eirError := getEquipementStatus(amfUe.ServingAMF().IMEIApiPrefix, amfUe.Pei)
 			if imeiChecking == "mandatory" && eirError != nil {
-				amfUe.GmmLog.Errorf("ADJIVAS SecurityMode GmmMessageEvent IMEIChecking mandatory error: %s", eirError)
+				amfUe.GmmLog.Errorf("IMEI mandatory mode rejects the user equipement %s because EIR received the error %s", amfUe.Pei, eirError)
 				gmm_message.SendRegistrationReject(amfUe.RanUe[accessType], nasMessage.Cause5GMMUESecurityCapabilitiesMismatch, "")
 				err := GmmFSM.SendEvent(state, SecurityModeFailEvent, fsm.ArgsType{
 					ArgAmfUe:      amfUe,
@@ -333,7 +328,7 @@ func SecurityMode(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
 				}
 				return
 			} else if (imeiChecking == "mandatory" || imeiChecking == "enabled") && eirResponseData.Status == "BLACKLISTED" {
-				amfUe.GmmLog.Errorf("ADJIVAS SecurityMode GmmMessageEvent IMEIChecking blacklisted: %s", amfUe.Pei)
+				amfUe.GmmLog.Errorf("IMEI %s mode rejects the user equipement %s because EIR had it as a blacklisted status", imeiChecking, amfUe.Pei)
 				gmm_message.SendRegistrationReject(amfUe.RanUe[accessType], nasMessage.Cause5GMMUESecurityCapabilitiesMismatch, "")
 				err := GmmFSM.SendEvent(state, SecurityModeFailEvent, fsm.ArgsType{
 					ArgAmfUe:      amfUe,
@@ -362,14 +357,12 @@ type EirResponseData struct {
 	Status string `json:"status"`
 }
 
-func adjivas_request_eir(uri string, imei string) (EirResponseData, error) {
+func getEquipementStatus(uri string, imei string) (EirResponseData, error) {
 	configuration := Nnrf_NFManagement.NewConfiguration()
 	configuration.SetBasePath(uri)
-	// var configuration openapi.Configuration
 
-	// localVarPath := http://127.0.0.7:8000 + "/n5g-eir-eic/v1/equipement-status?pei=imei-012345678901234"
 	localVarPath := uri + "/n5g-eir-eic/v1/equipement-status?pei=" + imei
-	logger.GmmLog.Infof("ADJIVAS adjivas_request_eir %+v", localVarPath)
+	logger.GmmLog.Debugf("Request EIR with %+v", localVarPath)
 	
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -384,38 +377,38 @@ func adjivas_request_eir(uri string, imei string) (EirResponseData, error) {
 	// body params
 	r, err := openapi.PrepareRequest(nil, configuration, localVarPath, "GET", nil, localVarHeaderParams, localVarQueryParams, localVarFormParams, "", "", nil)
 	if err != nil {
-		logger.GmmLog.Infof("ADJIVAS err %+v", err)
+		logger.GmmLog.Warnf("AMF can not prepares the request of EIR %+v", err)
 		return EirResponseData {}, err
 	}
 	
 	localVarHTTPResponse, err := openapi.CallAPI(configuration, r)
 	if err != nil || localVarHTTPResponse == nil {
-		logger.GmmLog.Warnf("ADJIVAS err %+v", err)
+		logger.GmmLog.Warnf("AMF can not calls the EIR API %+v, %+v", err, localVarHTTPResponse)
 		return EirResponseData {}, err
 	}
 
 	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 	if err != nil {
-		logger.GmmLog.Warnf("ADJIVAS err %+v", err)
+		logger.GmmLog.Warnf("AMF can not reads the EIR Body Response %+v", err)
 		return EirResponseData {}, err
 	}
 	err = localVarHTTPResponse.Body.Close()
 	if err != nil {
-		logger.GmmLog.Warnf("ADJIVAS err %+v", err)
+		logger.GmmLog.Warnf("AMF can not closes the EIR Body Response %+v", err)
 		return EirResponseData {}, err
 	}
 
 	var requestProblemDetails models.ProblemDetails
 	errProblemDetails := openapi.Deserialize(&requestProblemDetails, localVarBody, "application/json")
 	if errProblemDetails == nil {
-		logger.GmmLog.Warnf("ADJIVAS err %+v", err)
+		logger.GmmLog.Warnf("EIR received the error %+v for %+v", errProblemDetails, imei)
 		return EirResponseData {}, errProblemDetails
 	}
 
 	var requestResponseData EirResponseData 
 	errResponseData := openapi.Deserialize(&requestResponseData, localVarBody, "application/json")
 	if errResponseData == nil {
-		logger.GmmLog.Infof("ADJIVAS adjivas_request_eir Status %+v", requestResponseData.Status)
+		logger.GmmLog.Infof("EIR provides %+v for %+v", requestResponseData.Status, imei)
 		return requestResponseData, nil
 	}
 	return EirResponseData {}, errResponseData
