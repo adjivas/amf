@@ -89,8 +89,12 @@ func (s *Server) HTTPEventEir(c *gin.Context) {
 		logger.MainLog.Infof("ADJIVAS NF_DEREGISTERED %+v", requestNotificationData.NfInstanceUri)
 		s.ServerAmf.Context().IMEIApiPrefix = ""
 	} else if event == "NF_REGISTERED" {
-		logger.MainLog.Infof("ADJIVAS NF_REGISTERED %+v", requestNotificationData.NfInstanceUri)
-		s.ServerAmf.Context().IMEIApiPrefix = requestNotificationData.NfInstanceUri
+		if NfServices := requestNotificationData.NfProfile.NfServices; NfServices != nil {
+			logger.MainLog.Infof("ADJIVAS NF_REGISTERED PREFIX [%+v]", NfServices[0].ApiPrefix)
+			s.ServerAmf.Context().IMEIApiPrefix = NfServices[0].ApiPrefix
+		} else {
+			logger.MainLog.Warnf("ADJIVAS NF_REGISTERED receive incoherent event [%+v]", requestNotificationData)
+		}
 	}
 
 	c.JSON(http.StatusNoContent, nil)

@@ -3,10 +3,14 @@ package service
 import (
 	"context"
 	"io"
+	"fmt"
 	"os"
 	"runtime/debug"
 	"sync"
-	// "net/netip"
+	"net/url"
+	"strings"
+	"github.com/free5gc/openapi"
+	"net/netip"
 
 	"github.com/sirupsen/logrus"
 
@@ -123,6 +127,71 @@ func (a *AmfApp) SetReportCaller(reportCaller bool) {
 	logger.Log.SetReportCaller(reportCaller)
 }
 
+type EirResponseData struct {
+	Status string `json:"status"`
+}
+
+func (a *AmfApp) adjivas_request_eir() (EirResponseData, error) {
+	uri := a.Context().IMEIApiPrefix
+	configuration := Nnrf_NFManagement.NewConfiguration()
+	configuration.SetBasePath(uri)
+	logger.GmmLog.Infof("ADJIVAS adjivas_request_eir uri %+v", uri)
+	// var configuration openapi.Configuration
+
+	// localVarPath := uri + "/n5g-eir-eic/v1/equipement-status?pei=imei-012345678901234"
+	localVarPath := "http://127.0.0.7:8000/n5g-eir-eic/v1/equipement-status?pei=imei-012345678901234"
+	logger.GmmLog.Infof("ADJIVAS adjivas_request_eir %+v", localVarPath)
+	
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+	
+	localVarHTTPHeaderAccepts := []string{"application/json", "application/problem+json"}
+	localVarHTTPHeaderAccept := strings.Join(localVarHTTPHeaderAccepts, ", ")
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	
+	// body params
+	r, err := openapi.PrepareRequest(a.ctx, configuration, localVarPath, "GET", nil, localVarHeaderParams, localVarQueryParams, localVarFormParams, "", "", nil)
+	if err != nil {
+		logger.GmmLog.Infof("ADJIVAS err %+v", err)
+		return EirResponseData {}, err
+	}
+	
+	localVarHTTPResponse, err := openapi.CallAPI(configuration, r)
+	if err != nil || localVarHTTPResponse == nil {
+		logger.GmmLog.Warnf("ADJIVAS err %+v", err)
+		return EirResponseData {}, err
+	}
+
+	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	if err != nil {
+		logger.GmmLog.Warnf("ADJIVAS err %+v", err)
+		return EirResponseData {}, err
+	}
+	err = localVarHTTPResponse.Body.Close()
+	if err != nil {
+		logger.GmmLog.Warnf("ADJIVAS err %+v", err)
+		return EirResponseData {}, err
+	}
+
+	var requestProblemDetails models.ProblemDetails
+	errProblemDetails := openapi.Deserialize(&requestProblemDetails, localVarBody, "application/json")
+	if errProblemDetails == nil {
+		logger.GmmLog.Warnf("ADJIVAS err %+v", err)
+		return EirResponseData {}, errProblemDetails
+	}
+
+	var requestResponseData EirResponseData 
+	errResponseData := openapi.Deserialize(&requestResponseData, localVarBody, "application/json")
+	if errResponseData == nil {
+		logger.GmmLog.Infof("ADJIVAS adjivas_request_eir Status %+v", requestResponseData.Status)
+		return requestResponseData, nil
+	}
+	return EirResponseData {}, errResponseData
+}
+
 func (a *AmfApp) Start() {
 	self := a.Context()
 	amf_context.InitAmfContext(self)
@@ -146,7 +215,6 @@ func (a *AmfApp) Start() {
 	} else {
 		profile = profileTmp
 	}
-
 	// Init Eir
 	if a.Context().IMEIChecking == "enabled" || a.Context().IMEIChecking == "mandatory" {
 		eir, err := a.SearchEirInstance()
@@ -159,16 +227,20 @@ func (a *AmfApp) Start() {
 			a.Context().IMEIApiPrefix = prefix
 			logger.InitLog.Infof("Select the Eir instance [%+v]", prefix)
 		}
-		// port := a.Context().SBIPort
-		// addr := a.Context().BindingIP
-		// bindAddr := netip.AddrPortFrom(addr, uint16(port)).String()
-		// bindAddr := "http://127.0.0.18/namf-loc/v1";
-		bindAddr := "http://127.0.0.18:8000/namf-loc/v1";
+		port := a.Context().SBIPort
+		addr := a.Context().BindingIP
+		scheme := a.Context().UriScheme
+		bindAddr := netip.AddrPortFrom(addr, uint16(port)).String()
+		uriAmf := fmt.Sprintf("%s://%s", scheme, bindAddr)
+		logger.InitLog.Infof("ADJIVAS bindAddr TEST [%+v]", uriAmf)
+
+		// bindAddr = "http://127.0.0.18:8000";
+		// logger.InitLog.Infof("ADJIVAS bindAddr [%+v]", bindAddr)
 
 		// Subscription Eir Event
 		subscriptionData := Nnrf_NFManagement.CreateSubscriptionRequest {
 			NrfNfManagementSubscriptionData: &models.NrfNfManagementSubscriptionData {
-				NfStatusNotificationUri: bindAddr,
+				NfStatusNotificationUri: uriAmf + "/namf-loc/v1",
 				SubscrCond: &models.SubscrCond {
 					NfType: string(eir.NfType),
 					ServiceName: models.ServiceName_N5G_EIR_EIC,
@@ -176,7 +248,6 @@ func (a *AmfApp) Start() {
 				},
 			},
 		}
-		logger.MainLog.Infof("ADJIVAS subscriptionData %+v", bindAddr)
 		uri := a.Context().NrfUri
 		configuration := Nnrf_NFManagement.NewConfiguration()
 		configuration.SetBasePath(uri)
@@ -187,6 +258,10 @@ func (a *AmfApp) Start() {
 		} else {
 			logger.InitLog.Infof("Registered Subscriptions nRF Eir %+v", response.NrfNfManagementSubscriptionData.SubscriptionId)
 		}
+
+		// ADJIVAS Test
+		statusTest, _ := a.adjivas_request_eir() // Test
+		logger.InitLog.Warnf("EIR status test [%+v]", statusTest)
 	}
 
 	_, nfId, err_reg := a.Consumer().SendRegisterNFInstance(a.ctx, a.Context().NrfUri, a.Context().NfId, &profile)
