@@ -12,11 +12,10 @@ package sbi
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
-
 	"github.com/free5gc/amf/internal/logger"
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
+	"github.com/gin-gonic/gin"
 )
 
 func (s *Server) getLocationRoutes() []Route {
@@ -83,7 +82,7 @@ func (s *Server) HTTPEventEir(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, rsp)
 		return
 	}
-	
+
 	event := requestNotificationData.Event
 	if event == "NF_DEREGISTERED" {
 		logger.MainLog.Infof("AMF receives deregistration EIR notification %+v", requestNotificationData)

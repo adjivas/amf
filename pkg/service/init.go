@@ -7,8 +7,6 @@ import (
 	"runtime/debug"
 	"sync"
 
-	"github.com/sirupsen/logrus"
-
 	amf_context "github.com/free5gc/amf/internal/context"
 	"github.com/free5gc/amf/internal/logger"
 	"github.com/free5gc/amf/internal/ngap"
@@ -23,6 +21,7 @@ import (
 	"github.com/free5gc/openapi/models"
 	Nnrf_NFDiscovery "github.com/free5gc/openapi/nrf/NFDiscovery"
 	Nnrf_NFManagement "github.com/free5gc/openapi/nrf/NFManagement"
+	"github.com/sirupsen/logrus"
 )
 
 type AmfAppInterface interface {
@@ -37,12 +36,12 @@ var AMF AmfAppInterface
 type AmfApp struct {
 	AmfAppInterface
 
-	cfg       *factory.Config
-	amfCtx    *amf_context.AMFContext
-	ctx       context.Context
-	cancel    context.CancelFunc
-	wg        sync.WaitGroup
-	eirSubscriptionID  string
+	cfg               *factory.Config
+	amfCtx            *amf_context.AMFContext
+	ctx               context.Context
+	cancel            context.CancelFunc
+	wg                sync.WaitGroup
+	eirSubscriptionID string
 
 	processor *processor.Processor
 	consumer  *consumer.Consumer
@@ -162,7 +161,7 @@ func (a *AmfApp) Start() {
 			a.Context().IMEIApiPrefix = prefix
 			logger.InitLog.Infof("Select the Eir instance [%+v]", prefix)
 		}
-		
+
 		uriAmf := a.Context().GetIPUri()
 		logger.InitLog.Infof("Binding addr: [%+v]", uriAmf)
 
@@ -184,7 +183,7 @@ func (a *AmfApp) Start() {
 
 func (a *AmfApp) SearchEirInstance() (models.NrfNfDiscoveryNfProfile, error) {
 	NrfUri := a.Context().NrfUri
-	param := Nnrf_NFDiscovery.SearchNFInstancesRequest{ }
+	param := Nnrf_NFDiscovery.SearchNFInstancesRequest{}
 	resp, err := a.consumer.SendSearchNFInstances(NrfUri, models.NrfNfManagementNfType__5_G_EIR, models.NrfNfManagementNfType_AMF, &param)
 
 	if err != nil {
@@ -199,12 +198,12 @@ func (a *AmfApp) SearchEirInstance() (models.NrfNfDiscoveryNfProfile, error) {
 }
 
 func (a *AmfApp) createSubscriptionProcedure(eir models.NrfNfDiscoveryNfProfile, uriAmf string) {
-	subscriptionData := Nnrf_NFManagement.CreateSubscriptionRequest {
-		NrfNfManagementSubscriptionData: &models.NrfNfManagementSubscriptionData {
+	subscriptionData := Nnrf_NFManagement.CreateSubscriptionRequest{
+		NrfNfManagementSubscriptionData: &models.NrfNfManagementSubscriptionData{
 			NfStatusNotificationUri: uriAmf + "/namf-loc/v1",
-			SubscrCond: &models.SubscrCond {
-				NfType: string(eir.NfType),
-				ServiceName: models.ServiceName_N5G_EIR_EIC,
+			SubscrCond: &models.SubscrCond{
+				NfType:       string(eir.NfType),
+				ServiceName:  models.ServiceName_N5G_EIR_EIC,
 				NfInstanceId: eir.NfInstanceId,
 			},
 		},
@@ -213,7 +212,7 @@ func (a *AmfApp) createSubscriptionProcedure(eir models.NrfNfDiscoveryNfProfile,
 	configuration := Nnrf_NFManagement.NewConfiguration()
 	configuration.SetBasePath(uri)
 	client := Nnrf_NFManagement.NewAPIClient(configuration)
-	
+
 	response, err := client.SubscriptionsCollectionApi.CreateSubscription(context.TODO(), &subscriptionData)
 	if err != nil {
 		logger.MainLog.Fatalf("Send Subscriptions nRF Eir failed %+v", err)
@@ -230,7 +229,7 @@ func (a *AmfApp) removeSubscriptionProcedure() {
 		configuration.SetBasePath(uri)
 		client := Nnrf_NFManagement.NewAPIClient(configuration)
 
-		request := Nnrf_NFManagement.RemoveSubscriptionRequest {
+		request := Nnrf_NFManagement.RemoveSubscriptionRequest{
 			SubscriptionID: &eirSubscriptionID,
 		}
 		response, err := client.SubscriptionIDDocumentApi.RemoveSubscription(context.TODO(), &request)
