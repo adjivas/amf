@@ -48,13 +48,11 @@ func DeRegistered(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
 				logger.GmmLog.Errorln(err)
 			}
 		default:
-			amfUe.GmmLog.Errorf("state mismatch: receieve gmm message[message type 0x%0x] at %s state",
-				gmmMessage.GetMessageType(), state.Current())
+			amfUe.GmmLog.Errorf("state mismatch: receieve gmm message[message type 0x%0x] at %s state", gmmMessage.GetMessageType(), state.Current())
 		}
 	case StartAuthEvent:
 		logger.GmmLog.Debugln(event)
-	case fsm.ExitEvent:
-		logger.GmmLog.Debugln(event)
+	case fsm.ExitEvent: logger.GmmLog.Debugln(event)
 	default:
 		logger.GmmLog.Errorf("Unknown event [%+v]", event)
 	}
