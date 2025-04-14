@@ -331,7 +331,7 @@ func SecurityMode(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
 					logger.GmmLog.Errorln(err)
 				}
 				return
-			} else if (imeiChecking == "mandatory" || imeiChecking == "enabled") && eirResponseData.Status == "BLACKLISTED" 
+			} else if (imeiChecking == "mandatory" || imeiChecking == "enabled") && eirResponseData.Status == "BLACKLISTED" {
 				amfUe.GmmLog.Errorf("ADJIVAS SecurityMode GmmMessageEvent IMEIChecking blacklisted: %s", amfUe.Pei)
 				gmm_message.SendRegistrationReject(amfUe.RanUe[accessType], nasMessage.Cause5GMMUESecurityCapabilitiesMismatch, "")
 				err := GmmFSM.SendEvent(state, SecurityModeFailEvent, fsm.ArgsType{
@@ -341,7 +341,7 @@ func SecurityMode(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
 				if err != nil {
 					logger.GmmLog.Errorln(err)
 				}
-				return{
+				return
 			}
 		}
 
