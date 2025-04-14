@@ -42,11 +42,12 @@ var AMF AmfAppInterface
 type AmfApp struct {
 	AmfAppInterface
 
-	cfg    *factory.Config
-	amfCtx *amf_context.AMFContext
-	ctx    context.Context
-	cancel context.CancelFunc
-	wg     sync.WaitGroup
+	cfg       *factory.Config
+	amfCtx    *amf_context.AMFContext
+	ctx       context.Context
+	cancel    context.CancelFunc
+	wg        sync.WaitGroup
+	eirSubscriptionID  string
 
 	processor *processor.Processor
 	consumer  *consumer.Consumer
@@ -136,9 +137,7 @@ func (a *AmfApp) adjivas_request_eir() (EirResponseData, error) {
 	configuration := Nnrf_NFManagement.NewConfiguration()
 	configuration.SetBasePath(uri)
 	logger.GmmLog.Infof("ADJIVAS adjivas_request_eir uri %+v", uri)
-	// var configuration openapi.Configuration
 
-	// localVarPath := uri + "/n5g-eir-eic/v1/equipement-status?pei=imei-012345678901234"
 	localVarPath := "http://127.0.0.7:8000/n5g-eir-eic/v1/equipement-status?pei=imei-012345678901234"
 	logger.GmmLog.Infof("ADJIVAS adjivas_request_eir %+v", localVarPath)
 	
@@ -252,11 +251,13 @@ func (a *AmfApp) Start() {
 		configuration := Nnrf_NFManagement.NewConfiguration()
 		configuration.SetBasePath(uri)
 		client := Nnrf_NFManagement.NewAPIClient(configuration)
+		
 		response, err := client.SubscriptionsCollectionApi.CreateSubscription(context.TODO(), &subscriptionData)
 		if err != nil {
 			logger.MainLog.Fatalf("Send Subscriptions nRF Eir failed %+v", err)
 		} else {
 			logger.InitLog.Infof("Registered Subscriptions nRF Eir %+v", response.NrfNfManagementSubscriptionData.SubscriptionId)
+			a.eirSubscriptionID = response.NrfNfManagementSubscriptionData.SubscriptionId
 		}
 
 		// ADJIVAS Test
@@ -346,10 +347,31 @@ func (a *AmfApp) WaitRoutineStopped() {
 	logger.MainLog.Infof("AMF App is terminated")
 }
 
+func (a *AmfApp) removeSubscriptionProcedure() {
+	if eirSubscriptionID := a.eirSubscriptionID; eirSubscriptionID != "" {
+		uri := a.Context().NrfUri
+		configuration := Nnrf_NFManagement.NewConfiguration()
+		configuration.SetBasePath(uri)
+		client := Nnrf_NFManagement.NewAPIClient(configuration)
+
+		request := Nnrf_NFManagement.RemoveSubscriptionRequest {
+			SubscriptionID: &eirSubscriptionID,
+		}
+		response, err := client.SubscriptionIDDocumentApi.RemoveSubscription(context.TODO(), &request)
+		if err != nil {
+			logger.MainLog.Fatalf("Send RemoveSubscription nRF Eir failed %+v", err)
+		} else {
+			logger.InitLog.Infof("RemoveSubscription nRF Eir %+v", response)
+		}
+	}
+}
+
 func (a *AmfApp) terminateProcedure() {
 	logger.MainLog.Infof("Terminating AMF...")
 	a.CallServerStop()
+
 	// deregister with NRF
+	a.removeSubscriptionProcedure()
 	problemDetails, err_deg := a.Consumer().SendDeregisterNFInstance()
 	if problemDetails != nil {
 		logger.MainLog.Errorf("Deregister NF instance Failed Problem[%+v]", problemDetails)
