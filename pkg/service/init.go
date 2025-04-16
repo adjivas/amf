@@ -149,11 +149,19 @@ func (a *AmfApp) Start() {
 	} else {
 		profile = profileTmp
 	}
+
+	_, nfId, err_reg := a.Consumer().SendRegisterNFInstance(a.ctx, a.Context().NrfUri, a.Context().NfId, &profile)
+	if err_reg != nil {
+		logger.InitLog.Warnf("Send Register NF Instance failed: %+v", err_reg)
+	} else {
+		a.Context().NfId = nfId
+	}
+
 	// Init Eir
 	if a.Context().IMEIChecking == "enabled" || a.Context().IMEIChecking == "mandatory" {
 		eir, err := a.SearchEirInstance()
 		if err != nil {
-			logger.MainLog.Fatalf("Search Eir instance failed %+v", err)
+			logger.MainLog.Errorf("Search Eir instance failed %+v", err)
 		} else if eir.NfServices == nil {
 			logger.MainLog.Warnln("Not any Eir instance was found")
 		} else {
@@ -168,13 +176,6 @@ func (a *AmfApp) Start() {
 		a.createSubscriptionProcedure(eir, uriAmf)
 	}
 
-	_, nfId, err_reg := a.Consumer().SendRegisterNFInstance(a.ctx, a.Context().NrfUri, a.Context().NfId, &profile)
-	if err_reg != nil {
-		logger.InitLog.Warnf("Send Register NF Instance failed: %+v", err_reg)
-	} else {
-		a.Context().NfId = nfId
-	}
-
 	if err := a.sbiServer.Run(context.Background(), &a.wg); err != nil {
 		logger.MainLog.Fatalf("Run SBI server failed: %+v", err)
 	}
@@ -187,7 +188,7 @@ func (a *AmfApp) SearchEirInstance() (models.NrfNfDiscoveryNfProfile, error) {
 	resp, err := a.consumer.SendSearchNFInstances(NrfUri, models.NrfNfManagementNfType__5_G_EIR, models.NrfNfManagementNfType_AMF, &param)
 
 	if err != nil {
-		logger.MainLog.Fatalf("Send Search NF Instances 5_G_EIR failed: %+v", err)
+		logger.MainLog.Errorf("Send Search NF Instances 5_G_EIR failed: %+v", err)
 		return models.NrfNfDiscoveryNfProfile{}, err
 	}
 
@@ -215,7 +216,7 @@ func (a *AmfApp) createSubscriptionProcedure(eir models.NrfNfDiscoveryNfProfile,
 
 	response, err := client.SubscriptionsCollectionApi.CreateSubscription(context.TODO(), &subscriptionData)
 	if err != nil {
-		logger.MainLog.Fatalf("Send Subscriptions nRF Eir failed %+v", err)
+		logger.MainLog.Errorf("Send Subscriptions nRF Eir failed %+v", err)
 	} else {
 		logger.InitLog.Infof("Registered Subscriptions nRF Eir %+v", response.NrfNfManagementSubscriptionData.SubscriptionId)
 		a.eirSubscriptionID = response.NrfNfManagementSubscriptionData.SubscriptionId
@@ -234,7 +235,7 @@ func (a *AmfApp) removeSubscriptionProcedure() {
 		}
 		response, err := client.SubscriptionIDDocumentApi.RemoveSubscription(context.TODO(), &request)
 		if err != nil {
-			logger.MainLog.Fatalf("Send RemoveSubscription nRF Eir failed %+v", err)
+			logger.MainLog.Errorf("Send RemoveSubscription nRF Eir failed %+v", err)
 		} else {
 			logger.InitLog.Infof("RemoveSubscription nRF Eir %+v", response)
 		}
