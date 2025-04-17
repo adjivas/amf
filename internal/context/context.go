@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	eirset "github.com/free5gc/amf/internal/eirset"
 	"github.com/free5gc/amf/internal/logger"
 	"github.com/free5gc/amf/pkg/factory"
 	"github.com/free5gc/nas/nasConvert"
@@ -66,8 +67,8 @@ type AMFContext struct {
 	NfId                         string
 	Name                         string
 	NfService                    map[models.ServiceName]models.NrfNfManagementNfService // nfservice that amf support
-	IMEIApiPrefix                string
-	IMEIChecking                 string
+	EIRApiPrefix                 *eirset.EirSet
+	EIRChecking                  string
 	UriScheme                    models.UriScheme
 	BindingIP                    netip.Addr
 	SBIPort                      int
@@ -117,7 +118,7 @@ func InitAmfContext(context *AMFContext) {
 	logger.UtilLog.Infof("amfconfig Info: Version[%s]", config.GetVersion())
 	configuration := config.Configuration
 	context.NfId = uuid.New().String()
-	context.IMEIChecking = configuration.Imei.Checking
+	context.EIRChecking = configuration.Imei.Checking
 	sbi := configuration.Sbi
 	if configuration.AmfName != "" {
 		context.Name = configuration.AmfName
@@ -172,6 +173,8 @@ func InitAmfContext(context *AMFContext) {
 	context.T3570Cfg = configuration.T3570
 	context.T3555Cfg = configuration.T3555
 	context.Locality = configuration.Locality
+
+	context.EIRApiPrefix = eirset.New()
 }
 
 func getIntAlgOrder(integrityOrder []string) (intOrder []uint8) {
@@ -601,7 +604,7 @@ func (context *AMFContext) Reset() {
 	context.NrfUri = ""
 	context.NrfCertPem = ""
 	context.OAuth2Required = false
-	context.IMEIApiPrefix = ""
+	context.EIRApiPrefix = eirset.New()
 }
 
 // Create new AMF context

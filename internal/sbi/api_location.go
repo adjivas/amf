@@ -86,11 +86,14 @@ func (s *Server) HTTPEventEir(c *gin.Context) {
 	event := requestNotificationData.Event
 	if event == "NF_DEREGISTERED" {
 		logger.MainLog.Infof("AMF receives deregistration EIR notification %+v", requestNotificationData)
-		s.ServerAmf.Context().IMEIApiPrefix = ""
+		// TODO ADJIVAS add prefix
+		// s.ServerAmf.Context().EIRApiPrefix.Remove(prefix)
 	} else if event == "NF_REGISTERED" {
 		if NfServices := requestNotificationData.NfProfile.NfServices; NfServices != nil {
 			logger.MainLog.Infof("AMF receives %+v registration EIR notification", NfServices[0].ApiPrefix)
-			s.ServerAmf.Context().IMEIApiPrefix = NfServices[0].ApiPrefix
+			prefix := NfServices[0].ApiPrefix
+
+			s.ServerAmf.Context().EIRApiPrefix.Remove(prefix)
 		} else {
 			logger.MainLog.Warnf("AMF receives malformed registration EIR notification: [%+v]", requestNotificationData)
 		}

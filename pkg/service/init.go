@@ -158,7 +158,7 @@ func (a *AmfApp) Start() {
 	}
 
 	// Init Eir
-	if a.Context().IMEIChecking == "enabled" || a.Context().IMEIChecking == "mandatory" {
+	if a.Context().EIRChecking == "enabled" || a.Context().EIRChecking == "mandatory" {
 		eir, err := a.SearchEirInstance()
 		if err != nil {
 			logger.MainLog.Errorf("Search Eir instance failed %+v", err)
@@ -166,7 +166,7 @@ func (a *AmfApp) Start() {
 			logger.MainLog.Warnln("Not any Eir instance was found")
 		} else {
 			prefix := eir.NfServices[0].ApiPrefix
-			a.Context().IMEIApiPrefix = prefix
+			a.Context().EIRApiPrefix.Add(prefix)
 			logger.InitLog.Infof("Select the Eir instance [%+v]", prefix)
 		}
 
