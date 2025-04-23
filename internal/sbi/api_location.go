@@ -86,18 +86,29 @@ func (s *Server) HTTPEventEir(c *gin.Context) {
 	event := requestNotificationData.Event
 	if event == "NF_DEREGISTERED" {
 		logger.MainLog.Infof("AMF receives deregistration EIR notification %+v", requestNotificationData)
-		// TODO ADJIVAS add prefix
-		// s.ServerAmf.Context().EIRApiPrefix.Remove(prefix)
+		if NfServices := requestNotificationData.NfProfile.NfServices; NfServices != nil {
+			logger.MainLog.Infof("AMF receives %+v deregistration EIR notification", NfServices[0].ApiPrefix)
+			prefix := NfServices[0].ApiPrefix
+
+			if err := s.ServerAmf.Context().EIRApiPrefix.Remove(prefix); err != nil {
+				logger.InitLog.Warnf("EIR already removed %+v", err)
+			}
+		} else {
+			logger.MainLog.Warnf("AMF receives malformed deregistration EIR notification: [%+v][%+v]", requestNotificationData.NfInstanceUri, requestNotificationData.NfProfile)
+		}
 	} else if event == "NF_REGISTERED" {
 		if NfServices := requestNotificationData.NfProfile.NfServices; NfServices != nil {
 			logger.MainLog.Infof("AMF receives %+v registration EIR notification", NfServices[0].ApiPrefix)
 			prefix := NfServices[0].ApiPrefix
 
-			s.ServerAmf.Context().EIRApiPrefix.Remove(prefix)
+			if err := s.ServerAmf.Context().EIRApiPrefix.Add(prefix); err != nil {
+				logger.InitLog.Warnf("EIR already added %+v", err)
+			}
 		} else {
-			logger.MainLog.Warnf("AMF receives malformed registration EIR notification: [%+v]", requestNotificationData)
+			logger.MainLog.Warnf("AMF receives malformed registration EIR notification: [%+v]", requestNotificationData.NfProfile)
 		}
 	}
+	s.ServerAmf.Context().EIRApiPrefix.Debug()
 
 	c.JSON(http.StatusNoContent, nil)
 }

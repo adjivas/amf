@@ -19,9 +19,10 @@ func New() *EirSet {
 	}
 }
 
-func (s *EirSet) Add(v string) {
+func (s *EirSet) Add(v string) error {
 	if _, exists := s.lookup[v]; exists {
-		logger.UtilLog.Debugln("value already present")
+		logger.UtilLog.Debugln("EIR value already exists")
+		return errors.New("EIR value already exists")
 	} else {
 		n := ring.New(1)
 		n.Value = v
@@ -34,13 +35,15 @@ func (s *EirSet) Add(v string) {
 
 		s.lookup[v] = n
 		s.size++
+		return nil
 	}
 }
 
-func (s *EirSet) Remove(v string) {
+func (s *EirSet) Remove(v string) error {
 	n, exists := s.lookup[v]
 	if !exists {
-		logger.UtilLog.Debugln("value not found")
+		logger.UtilLog.Debugln("EIR missing value")
+		return errors.New("EIR missing value")
 	}
 
 	if s.size == 1 {
@@ -54,12 +57,26 @@ func (s *EirSet) Remove(v string) {
 	}
 	delete(s.lookup, v)
 	s.size--
+	return nil
 }
 
 func (s *EirSet) Next() (string, error) {
 	if s.head == nil {
-		return "", errors.New("set is empty")
+		logger.UtilLog.Debugln("EIR set is empty")
+		return "", errors.New("EIR set is empty")
+	} else {
+		s.head = s.head.Next()
+		return s.head.Value.(string), nil
 	}
-	s.head = s.head.Next()
-	return s.head.Value.(string), nil
+}
+
+func (s *EirSet) Debug() {
+	if logger.Log.GetLevel().String() == "debug" {
+		eirList := []string { }
+		for index := 0; index < s.size; index++ {
+			eir, _ := s.Next()
+			eirList = append(eirList, eir)
+		}
+		logger.UtilLog.Debugf("EirSet List: (%s)", eirList)
+	}
 }

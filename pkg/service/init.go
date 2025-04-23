@@ -159,21 +159,28 @@ func (a *AmfApp) Start() {
 
 	// Init Eir
 	if a.Context().EIRChecking == "enabled" || a.Context().EIRChecking == "mandatory" {
-		eir, err := a.SearchEirInstance()
+		eirNfList, err := a.SearchEirInstance()
 		if err != nil {
 			logger.MainLog.Errorf("Search Eir instance failed %+v", err)
-		} else if eir.NfServices == nil {
+		} else if eirNfList == nil {
 			logger.MainLog.Warnln("Not any Eir instance was found")
 		} else {
-			prefix := eir.NfServices[0].ApiPrefix
-			a.Context().EIRApiPrefix.Add(prefix)
-			logger.InitLog.Infof("Select the Eir instance [%+v]", prefix)
+			eirPrefixList := []string { }
+			for _, eirNf:= range eirNfList {
+				eirPrefix := eirNf.NfServices[0].ApiPrefix
+				if err := a.Context().EIRApiPrefix.Add(eirPrefix); err != nil {
+					logger.InitLog.Warnf("EIR already added %+v", err)
+				} else {
+					eirPrefixList = append(eirPrefixList, eirPrefix)
+				}
+			}
+			logger.InitLog.Infof("Select the Eir instance %+v", eirPrefixList)
 		}
 
 		uriAmf := a.Context().GetIPUri()
 		logger.InitLog.Infof("Binding addr: [%+v]", uriAmf)
 
-		a.createSubscriptionProcedure(eir, uriAmf)
+		a.createSubscriptionProcedure(uriAmf)
 	}
 
 	if err := a.sbiServer.Run(context.Background(), &a.wg); err != nil {
@@ -182,30 +189,24 @@ func (a *AmfApp) Start() {
 	a.WaitRoutineStopped()
 }
 
-func (a *AmfApp) SearchEirInstance() (models.NrfNfDiscoveryNfProfile, error) {
+func (a *AmfApp) SearchEirInstance() ([]models.NrfNfDiscoveryNfProfile, error) {
 	NrfUri := a.Context().NrfUri
 	param := Nnrf_NFDiscovery.SearchNFInstancesRequest{}
 	resp, err := a.consumer.SendSearchNFInstances(NrfUri, models.NrfNfManagementNfType__5_G_EIR, models.NrfNfManagementNfType_AMF, &param)
 
 	if err != nil {
-		logger.MainLog.Errorf("Send Search NF Instances 5_G_EIR failed: %+v", err)
-		return models.NrfNfDiscoveryNfProfile{}, err
+		logger.MainLog.Warnf("Send Search NF Instances 5_G_EIR failed: %+v", err)
 	}
-
-	for index := range resp.NfInstances {
-		return resp.NfInstances[index], nil
-	}
-	return models.NrfNfDiscoveryNfProfile{}, nil
+	return resp.NfInstances, err 
 }
 
-func (a *AmfApp) createSubscriptionProcedure(eir models.NrfNfDiscoveryNfProfile, uriAmf string) {
+func (a *AmfApp) createSubscriptionProcedure(uriAmf string) {
 	subscriptionData := Nnrf_NFManagement.CreateSubscriptionRequest{
 		NrfNfManagementSubscriptionData: &models.NrfNfManagementSubscriptionData{
 			NfStatusNotificationUri: uriAmf + "/namf-loc/v1",
 			SubscrCond: &models.SubscrCond{
-				NfType:       string(eir.NfType),
+				NfType:       string(models.NrfNfManagementNfType__5_G_EIR),
 				ServiceName:  models.ServiceName_N5G_EIR_EIC,
-				NfInstanceId: eir.NfInstanceId,
 			},
 		},
 	}
