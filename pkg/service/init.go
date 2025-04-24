@@ -165,16 +165,13 @@ func (a *AmfApp) Start() {
 		} else if eirNfList == nil {
 			logger.MainLog.Warnln("Not any Eir instance was found")
 		} else {
-			eirPrefixList := []string { }
 			for _, eirNf:= range eirNfList {
 				eirPrefix := eirNf.NfServices[0].ApiPrefix
 				if err := a.Context().EIRApiPrefix.Add(eirPrefix); err != nil {
 					logger.InitLog.Warnf("EIR already added %+v", err)
-				} else {
-					eirPrefixList = append(eirPrefixList, eirPrefix)
 				}
 			}
-			logger.InitLog.Infof("Select the Eir instance %+v", eirPrefixList)
+			a.Context().EIRApiPrefix.PrintAll()
 		}
 
 		uriAmf := a.Context().GetIPUri()

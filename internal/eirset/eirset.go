@@ -70,13 +70,11 @@ func (s *EirSet) Next() (string, error) {
 	}
 }
 
-func (s *EirSet) Debug() {
-	if logger.Log.GetLevel().String() == "debug" {
-		eirList := []string { }
-		for index := 0; index < s.size; index++ {
-			eir, _ := s.Next()
-			eirList = append(eirList, eir)
-		}
-		logger.UtilLog.Debugf("EirSet List: (%s)", eirList)
+func (s *EirSet) PrintAll() {
+	eirList := []string { }
+	for index := 0; index < s.size; index++ {
+		eir, _ := s.Next()
+		eirList = append(eirList, eir)
 	}
+	logger.UtilLog.Infof("EirSet List: (%s)", eirList)
 }

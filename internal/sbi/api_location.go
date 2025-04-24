@@ -108,7 +108,7 @@ func (s *Server) HTTPEventEir(c *gin.Context) {
 			logger.MainLog.Warnf("AMF receives malformed registration EIR notification: [%+v]", requestNotificationData.NfProfile)
 		}
 	}
-	s.ServerAmf.Context().EIRApiPrefix.Debug()
+	s.ServerAmf.Context().EIRApiPrefix.PrintAll()
 
 	c.JSON(http.StatusNoContent, nil)
 }

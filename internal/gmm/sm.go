@@ -316,13 +316,13 @@ func SecurityMode(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
 		}
 
 		if eirChecking := amfUe.ServingAMF().EIRChecking; eirChecking != "" {
-			prefix, err := amfUe.ServingAMF().EIRApiPrefix.Next()
+			eirPrefix, err := amfUe.ServingAMF().EIRApiPrefix.Next()
 			if err != nil {
 				logger.GmmLog.Errorln(err)
 			}
-			eirResponseData, eirError := getEquipementStatus(prefix, amfUe.Pei)
+			eirResponseData, eirError := getEquipementStatus(eirPrefix, amfUe.Pei)
 			if eirChecking == "mandatory" && eirError != nil {
-				amfUe.GmmLog.Errorf("IMEI mandatory mode rejects the user equipement %s with the EIR error %s", amfUe.Pei, eirError)
+				amfUe.GmmLog.Warnf("The %s EIR mandatory mode rejects the %s PEI with the %s error", eirPrefix, amfUe.Pei, eirError)
 				gmm_message.SendRegistrationReject(amfUe.RanUe[accessType], nasMessage.Cause5GMMUEIdentityCannotBeDerivedByTheNetwork, "")
 				err := GmmFSM.SendEvent(state, SecurityModeFailEvent, fsm.ArgsType{
 					ArgAmfUe:      amfUe,
@@ -332,7 +332,7 @@ func SecurityMode(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
 					logger.GmmLog.Errorln(err)
 				}
 			} else if (eirChecking == "mandatory" || eirChecking == "enabled") && eirResponseData.Status == "BLACKLISTED" {
-				amfUe.GmmLog.Errorf("IMEI %s mode rejects the user equipement %s by the EIR", eirChecking, amfUe.Pei)
+				amfUe.GmmLog.Warnf("The %s EIR %s mode rejects the %s PEI ", eirPrefix, eirChecking, amfUe.Pei)
 				gmm_message.SendRegistrationReject(amfUe.RanUe[accessType], nasMessage.Cause5GMMIllegalUE, "")
 				err := GmmFSM.SendEvent(state, SecurityModeFailEvent, fsm.ArgsType{
 					ArgAmfUe:      amfUe,
@@ -341,6 +341,8 @@ func SecurityMode(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
 				if err != nil {
 					logger.GmmLog.Errorln(err)
 				}
+			} else {
+				amfUe.GmmLog.Warnf("The %s EIR %s mode approves the %s PEI", eirPrefix, eirChecking, amfUe.Pei)
 			}
 		}
 
@@ -360,11 +362,11 @@ type EirResponseData struct {
 	Status string `json:"status"`
 }
 
-func getEquipementStatus(uri string, imei string) (EirResponseData, error) {
+func getEquipementStatus(uri string, eir string) (EirResponseData, error) {
 	configuration := Nnrf_NFManagement.NewConfiguration()
 	configuration.SetBasePath(uri)
 
-	localVarPath := uri + "/n5g-eir-eic/v1/equipement-status?pei=" + imei
+	localVarPath := uri + "/n5g-eir-eic/v1/equipement-status?pei=" + eir
 	logger.GmmLog.Debugf("Request EIR with %+v", localVarPath)
 
 	localVarHeaderParams := make(map[string]string)
@@ -404,14 +406,14 @@ func getEquipementStatus(uri string, imei string) (EirResponseData, error) {
 	var requestProblemDetails models.ProblemDetails
 	errProblemDetails := openapi.Deserialize(&requestProblemDetails, localVarBody, "application/json")
 	if errProblemDetails == nil {
-		logger.GmmLog.Warnf("EIR received the error %+v for %+v", errProblemDetails, imei)
+		logger.GmmLog.Warnf("EIR received the error %+v for %+v", errProblemDetails, eir)
 		return EirResponseData{}, errProblemDetails
 	}
 
 	var requestResponseData EirResponseData
 	errResponseData := openapi.Deserialize(&requestResponseData, localVarBody, "application/json")
 	if errResponseData == nil {
-		logger.GmmLog.Infof("EIR provides %+v for %+v", requestResponseData.Status, imei)
+		logger.GmmLog.Infof("EIR provides %+v for %+v", requestResponseData.Status, eir)
 		return requestResponseData, nil
 	}
 	return EirResponseData{}, errResponseData
