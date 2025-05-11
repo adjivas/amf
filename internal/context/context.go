@@ -66,8 +66,8 @@ type AMFContext struct {
 	NfId                         string
 	Name                         string
 	NfService                    map[models.ServiceName]models.NrfNfManagementNfService // nfservice that amf support
-	IMEIApiPrefix                string
-	IMEIChecking                 string
+	EIRApiPrefix                string
+	EIRChecking                 string
 	UriScheme                    models.UriScheme
 	BindingIP                    netip.Addr
 	SBIPort                      int
@@ -117,7 +117,7 @@ func InitAmfContext(context *AMFContext) {
 	logger.UtilLog.Infof("amfconfig Info: Version[%s]", config.GetVersion())
 	configuration := config.Configuration
 	context.NfId = uuid.New().String()
-	context.IMEIChecking = configuration.Imei.Checking
+	context.EIRChecking = configuration.Imei.Checking
 	sbi := configuration.Sbi
 	if configuration.AmfName != "" {
 		context.Name = configuration.AmfName
@@ -601,7 +601,7 @@ func (context *AMFContext) Reset() {
 	context.NrfUri = ""
 	context.NrfCertPem = ""
 	context.OAuth2Required = false
-	context.IMEIApiPrefix = ""
+	context.EIRApiPrefix = ""
 }
 
 // Create new AMF context

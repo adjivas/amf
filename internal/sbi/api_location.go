@@ -87,10 +87,12 @@ func (s *Server) HTTPEventEir(c *gin.Context) {
 	if event == "NF_DEREGISTERED" {
 		if NfServices := requestNotificationData.NfProfile.NfServices; NfServices != nil {
 			logger.MainLog.Infof("AMF receives %+v deregistration EIR notification", NfServices[0].ApiPrefix)
-			if s.ServerAmf.Context().IMEIApiPrefix == NfServices[0].ApiPrefix {
-				s.ServerAmf.Context().IMEIApiPrefix = ""
+			if s.ServerAmf.Context().EIRApiPrefix == NfServices[0].ApiPrefix {
+				s.ServerAmf.Context().EIRApiPrefix = ""
+			} else if s.ServerAmf.Context().EIRApiPrefix == ""{
+				logger.MainLog.Warnf("This EIR notification is ignored, because the AMF haven't any EIR registered")
 			} else {
-				logger.MainLog.Warnf("This EIR notification is ignored, because the AMF use the %+v EIR", NfServices[0].ApiPrefix)
+				logger.MainLog.Warnf("This EIR notification is ignored, because the AMF use the %+v EIR", s.ServerAmf.Context().EIRApiPrefix)
 			}
 		} else {
 			logger.MainLog.Warnf("AMF receives malformed deregistration EIR notification: %+v", requestNotificationData)
@@ -98,8 +100,8 @@ func (s *Server) HTTPEventEir(c *gin.Context) {
 	} else if event == "NF_REGISTERED" {
 		if NfServices := requestNotificationData.NfProfile.NfServices; NfServices != nil {
 			logger.MainLog.Infof("AMF receives %+v registration EIR notification", NfServices[0].ApiPrefix)
-			if s.ServerAmf.Context().IMEIApiPrefix == "" {
-				s.ServerAmf.Context().IMEIApiPrefix = NfServices[0].ApiPrefix
+			if s.ServerAmf.Context().EIRApiPrefix == "" {
+				s.ServerAmf.Context().EIRApiPrefix = NfServices[0].ApiPrefix
 			} else {
 				logger.MainLog.Warnf("This EIR notification is ignored, because the AMF use the %+v EIR", NfServices[0].ApiPrefix)
 			}
