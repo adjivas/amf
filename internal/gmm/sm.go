@@ -23,6 +23,11 @@ import (
 	"github.com/free5gc/util/fsm"
 )
 
+const (
+	EirResUriPrefix = "/n5g-eir-eic/v1"
+	EirResEquipementStatus = "/equipement-status?pei="
+)
+
 func DeRegistered(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
 	switch event {
 	case fsm.EntryEvent:
@@ -357,7 +362,7 @@ func getEquipementStatus(uri string, imei string) (eir_model.EirResponseData, er
 	configuration := Neir_NFManagement.NewConfiguration()
 	configuration.SetBasePath(uri)
 
-	localVarPath := uri + "/n5g-eir-eic/v1/equipement-status?pei=" + imei
+	localVarPath := uri + EirResUriPrefix + EirResEquipementStatus + imei
 	logger.GmmLog.Debugf("Request EIR with %+v", localVarPath)
 
 	localVarHeaderParams := make(map[string]string)
