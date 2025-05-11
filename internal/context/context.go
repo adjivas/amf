@@ -97,6 +97,8 @@ type AMFContext struct {
 	Locality string
 
 	OAuth2Required bool
+
+	sync.RWMutex
 }
 
 type AMFContextEventSubscription struct {

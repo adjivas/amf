@@ -55,6 +55,9 @@ func (s *Server) getLocationRoutes() []Route {
 }
 
 func (s *Server) HTTPEventEir(c *gin.Context) {
+	s.ServerAmf.Context().Lock()
+	defer s.ServerAmf.Context().Unlock()
+
 	var requestNotificationData models.NrfNfManagementNotificationData
 
 	requestBody, err := c.GetRawData()
