@@ -122,10 +122,6 @@ func (a *AmfApp) SetReportCaller(reportCaller bool) {
 	logger.Log.SetReportCaller(reportCaller)
 }
 
-type EirResponseData struct {
-	Status string `json:"status"`
-}
-
 func (a *AmfApp) Start() {
 	self := a.Context()
 	amf_context.InitAmfContext(self)

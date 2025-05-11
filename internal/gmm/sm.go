@@ -17,8 +17,9 @@ import (
 	"github.com/free5gc/nas/nasMessage"
 	"github.com/free5gc/ngap/ngapType"
 	"github.com/free5gc/openapi"
+	eir_model "github.com/adjivas/openapi/models"
 	"github.com/free5gc/openapi/models"
-	Nnrf_NFManagement "github.com/free5gc/openapi/nrf/NFManagement"
+	Neir_NFManagement "github.com/free5gc/openapi/eir/NFManagement"
 	"github.com/free5gc/util/fsm"
 )
 
@@ -352,12 +353,8 @@ func SecurityMode(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
 	}
 }
 
-type EirResponseData struct {
-	Status string `json:"status"`
-}
-
-func getEquipementStatus(uri string, imei string) (EirResponseData, error) {
-	configuration := Nnrf_NFManagement.NewConfiguration()
+func getEquipementStatus(uri string, imei string) (eir_model.EirResponseData, error) {
+	configuration := Neir_NFManagement.NewConfiguration()
 	configuration.SetBasePath(uri)
 
 	localVarPath := uri + "/n5g-eir-eic/v1/equipement-status?pei=" + imei
@@ -377,40 +374,40 @@ func getEquipementStatus(uri string, imei string) (EirResponseData, error) {
 	r, err := openapi.PrepareRequest(context.TODO(), configuration, localVarPath, "GET", nil, localVarHeaderParams, localVarQueryParams, localVarFormParams, "", "", nil)
 	if err != nil {
 		logger.GmmLog.Warnf("AMF can not prepares the request of EIR %+v", err)
-		return EirResponseData{}, err
+		return eir_model.EirResponseData{}, err
 	}
 
 	localVarHTTPResponse, err := openapi.CallAPI(configuration, r)
 	if err != nil || localVarHTTPResponse == nil {
 		logger.GmmLog.Warnf("AMF can not calls the EIR API %+v, %+v", err, localVarHTTPResponse)
-		return EirResponseData{}, err
+		return eir_model.EirResponseData{}, err
 	}
 
 	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 	if err != nil {
 		logger.GmmLog.Warnf("AMF can not reads the EIR Body Response %+v", err)
-		return EirResponseData{}, err
+		return eir_model.EirResponseData{}, err
 	}
 	err = localVarHTTPResponse.Body.Close()
 	if err != nil {
 		logger.GmmLog.Warnf("AMF can not closes the EIR Body Response %+v", err)
-		return EirResponseData{}, err
+		return eir_model.EirResponseData{}, err
 	}
 
 	var requestProblemDetails models.ProblemDetails
 	errProblemDetails := openapi.Deserialize(&requestProblemDetails, localVarBody, "application/json")
 	if errProblemDetails == nil {
 		logger.GmmLog.Warnf("EIR received the error %+v for %+v", errProblemDetails, imei)
-		return EirResponseData{}, errProblemDetails
+		return eir_model.EirResponseData{}, errProblemDetails
 	}
 
-	var requestResponseData EirResponseData
+	var requestResponseData eir_model.EirResponseData
 	errResponseData := openapi.Deserialize(&requestResponseData, localVarBody, "application/json")
 	if errResponseData == nil {
 		logger.GmmLog.Infof("EIR provides %+v for %+v", requestResponseData.Status, imei)
 		return requestResponseData, nil
 	}
-	return EirResponseData{}, errResponseData
+	return eir_model.EirResponseData{}, errResponseData
 }
 
 func ContextSetup(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
