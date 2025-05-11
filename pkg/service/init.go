@@ -197,7 +197,7 @@ func (a *AmfApp) SearchEirInstance() (models.NrfNfDiscoveryNfProfile, error) {
 func (a *AmfApp) createSubscriptionProcedure(eir models.NrfNfDiscoveryNfProfile, uriAmf string) {
 	subscriptionData := Nnrf_NFManagement.CreateSubscriptionRequest{
 		NrfNfManagementSubscriptionData: &models.NrfNfManagementSubscriptionData{
-			NfStatusNotificationUri: uriAmf + "/namf-loc/v1",
+			NfStatusNotificationUri: uriAmf + "/namf-loc/v1/nnrf-nfm/v1",
 			SubscrCond: &models.SubscrCond{
 				NfType:       string(eir.NfType),
 				ServiceName:  models.ServiceName_N5G_EIR_EIC,
