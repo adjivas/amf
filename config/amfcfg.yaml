@@ -16,7 +16,7 @@ configuration:
   # Service-based Interface (SBI) Configuration
   sbi:
     scheme: http # the protocol for sbi (http or https)
-    oauth: true
+    oauth: false
     registerIP: 127.0.0.18 # IP used to register to NRF
     bindingIP: 127.0.0.18  # IP used to bind the service
     # port: 80 # port used to bind the service

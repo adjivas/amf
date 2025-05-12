@@ -1,11 +1,12 @@
 package gmm
 
 import (
+	"context"
 	"io"
 	"net/url"
 	"strings"
 
-	"context"
+	eir_model "github.com/adjivas/openapi/models"
 	amf_context "github.com/free5gc/amf/internal/context"
 	gmm_common "github.com/free5gc/amf/internal/gmm/common"
 	gmm_message "github.com/free5gc/amf/internal/gmm/message"
@@ -17,14 +18,13 @@ import (
 	"github.com/free5gc/nas/nasMessage"
 	"github.com/free5gc/ngap/ngapType"
 	"github.com/free5gc/openapi"
-	eir_model "github.com/adjivas/openapi/models"
-	"github.com/free5gc/openapi/models"
 	Neir_NFManagement "github.com/free5gc/openapi/eir/NFManagement"
+	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/util/fsm"
 )
 
 const (
-	EirResUriPrefix = "/n5g-eir-eic/v1"
+	EirResUriPrefix        = "/n5g-eir-eic/v1"
 	EirResEquipementStatus = "/equipement-status?pei="
 )
 
@@ -322,7 +322,7 @@ func SecurityMode(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
 		}
 
 		if eirChecking := amfUe.ServingAMF().EIRChecking; eirChecking != "" {
-			eirResponseData, eirError := getEquipementStatus(amfUe.ServingAMF().EIRApiPrefix, amfUe.Pei)
+			eirResponseData, eirError := getEquipementStatus(amfUe.ServingAMF().EIRRegistrationInfo.EIRApiPrefix, amfUe.Pei)
 			if eirChecking == "mandatory" && eirError != nil {
 				amfUe.GmmLog.Errorf("IMEI mandatory mode rejects the user equipement %s with the EIR error %s", amfUe.Pei, eirError)
 				gmm_message.SendRegistrationReject(amfUe.RanUe[accessType], nasMessage.Cause5GMMUEIdentityCannotBeDerivedByTheNetwork, "")

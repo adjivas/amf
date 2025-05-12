@@ -52,6 +52,11 @@ type NFContext interface {
 
 var _ NFContext = &AMFContext{}
 
+type EIRRegistrationInfo struct {
+	EIRApiPrefix  string
+	NfInstanceUri string
+}
+
 type AMFContext struct {
 	EventSubscriptionIDGenerator *idgenerator.IDGenerator
 	EventSubscriptions           sync.Map
@@ -66,8 +71,8 @@ type AMFContext struct {
 	NfId                         string
 	Name                         string
 	NfService                    map[models.ServiceName]models.NrfNfManagementNfService // nfservice that amf support
-	EIRApiPrefix                string
-	EIRChecking                 string
+	EIRRegistrationInfo          EIRRegistrationInfo
+	EIRChecking                  string
 	UriScheme                    models.UriScheme
 	BindingIP                    netip.Addr
 	SBIPort                      int
@@ -603,7 +608,8 @@ func (context *AMFContext) Reset() {
 	context.NrfUri = ""
 	context.NrfCertPem = ""
 	context.OAuth2Required = false
-	context.EIRApiPrefix = ""
+	context.EIRRegistrationInfo.EIRApiPrefix = ""
+	context.EIRRegistrationInfo.NfInstanceUri = ""
 }
 
 // Create new AMF context

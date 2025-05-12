@@ -88,28 +88,32 @@ func (s *Server) HTTPEventEir(c *gin.Context) {
 
 	event := requestNotificationData.Event
 	if event == "NF_DEREGISTERED" {
-		if NfServices := requestNotificationData.NfProfile.NfServices; NfServices != nil {
-			logger.MainLog.Infof("AMF receives %+v deregistration EIR notification", NfServices[0].ApiPrefix)
-			if s.ServerAmf.Context().EIRApiPrefix == NfServices[0].ApiPrefix {
-				s.ServerAmf.Context().EIRApiPrefix = ""
-			} else if s.ServerAmf.Context().EIRApiPrefix == "" {
-				logger.MainLog.Warnf("This EIR notification is ignored because the AMF doesn't have a registered EIR")
+		if requestNotificationData.NfInstanceUri != "" {
+			logger.LocationLog.Infof("AMF receives %+v deregistration EIR notification", requestNotificationData.NfInstanceUri)
+			if s.ServerAmf.Context().EIRRegistrationInfo.NfInstanceUri == requestNotificationData.NfInstanceUri {
+				s.ServerAmf.Context().EIRRegistrationInfo.NfInstanceUri = ""
+				s.ServerAmf.Context().EIRRegistrationInfo.EIRApiPrefix = ""
+				logger.LocationLog.Debug("The AMF's EIR was removed")
+			} else if s.ServerAmf.Context().EIRRegistrationInfo.NfInstanceUri == "" {
+				logger.LocationLog.Warnf("This EIR notification is ignored because the AMF doesn't have a registered EIR")
 			} else {
-				logger.MainLog.Warnf("This EIR notification is ignored because the AMF has the %+v EIR", s.ServerAmf.Context().EIRApiPrefix)
+				logger.LocationLog.Warnf("This EIR notification is ignored because the AMF has the %+v EIR", s.ServerAmf.Context().EIRRegistrationInfo.NfInstanceUri)
 			}
 		} else {
-			logger.MainLog.Warnf("AMF receives malformed deregistration EIR notification: %+v", requestNotificationData)
+			logger.LocationLog.Warnf("AMF receives malformed deregistration EIR notification: [%+v]", requestNotificationData)
 		}
 	} else if event == "NF_REGISTERED" {
-		if NfServices := requestNotificationData.NfProfile.NfServices; NfServices != nil {
-			logger.MainLog.Infof("AMF receives %+v registration EIR notification", NfServices[0].ApiPrefix)
-			if s.ServerAmf.Context().EIRApiPrefix == "" {
-				s.ServerAmf.Context().EIRApiPrefix = NfServices[0].ApiPrefix
+		if requestNotificationData.NfInstanceUri != "" {
+			logger.LocationLog.Infof("AMF receives %+v registration EIR notification", requestNotificationData.NfInstanceUri)
+			if s.ServerAmf.Context().EIRRegistrationInfo.NfInstanceUri == "" {
+				s.ServerAmf.Context().EIRRegistrationInfo.NfInstanceUri = requestNotificationData.NfInstanceUri
+				s.ServerAmf.Context().EIRRegistrationInfo.EIRApiPrefix = requestNotificationData.NfProfile.NfServices[0].ApiPrefix
+				logger.LocationLog.Debugf("The AMF's EIR was set to: [%+v]", requestNotificationData.NfInstanceUri)
 			} else {
-				logger.MainLog.Warnf("This EIR notification is ignored because the AMF has the %+v EIR", NfServices[0].ApiPrefix)
+				logger.LocationLog.Warnf("This EIR notification is ignored because the AMF has the %+v EIR", s.ServerAmf.Context().EIRRegistrationInfo.NfInstanceUri)
 			}
 		} else {
-			logger.MainLog.Warnf("AMF receives malformed registration EIR notification: [%+v]", requestNotificationData)
+			logger.LocationLog.Warnf("AMF receives malformed registration EIR notification: [%+v]", requestNotificationData)
 		}
 	}
 

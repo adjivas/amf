@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"io"
 	"os"
 	"runtime/debug"
@@ -155,21 +156,18 @@ func (a *AmfApp) Start() {
 
 	// Init Eir
 	if a.Context().EIRChecking == "enabled" || a.Context().EIRChecking == "mandatory" {
-		eir, err := a.SearchEirInstance()
+		EIRRegistrationInfo, err := a.SearchEirInstance()
 		if err != nil {
-			logger.MainLog.Errorf("Search Eir instance failed %+v", err)
-		} else if eir.NfServices == nil {
-			logger.MainLog.Warnln("Not any Eir instance was found")
+			logger.MainLog.Warnf("Search Eir instance failed %+v", err)
 		} else {
-			prefix := eir.NfServices[0].ApiPrefix
-			a.Context().EIRApiPrefix = prefix
-			logger.InitLog.Infof("Select the Eir instance [%+v]", prefix)
+			logger.InitLog.Infof("Select the Eir instance [%+v]", EIRRegistrationInfo.NfInstanceUri)
+			a.Context().EIRRegistrationInfo = EIRRegistrationInfo
 		}
 
 		uriAmf := a.Context().GetIPUri()
 		logger.InitLog.Infof("Binding addr: [%+v]", uriAmf)
 
-		a.createSubscriptionProcedure(eir, uriAmf)
+		a.createEirSubscriptionProcedure(EIRRegistrationInfo.NfInstanceUri, uriAmf)
 	}
 
 	if err := a.sbiServer.Run(context.Background(), &a.wg); err != nil {
@@ -178,30 +176,40 @@ func (a *AmfApp) Start() {
 	a.WaitRoutineStopped()
 }
 
-func (a *AmfApp) SearchEirInstance() (models.NrfNfDiscoveryNfProfile, error) {
+func (a *AmfApp) SearchEirInstance() (amf_context.EIRRegistrationInfo, error) {
 	NrfUri := a.Context().NrfUri
 	param := Nnrf_NFDiscovery.SearchNFInstancesRequest{}
 	resp, err := a.consumer.SendSearchNFInstances(NrfUri, models.NrfNfManagementNfType__5_G_EIR, models.NrfNfManagementNfType_AMF, &param)
 
 	if err != nil {
 		logger.MainLog.Errorf("Send Search NF Instances 5_G_EIR failed: %+v", err)
-		return models.NrfNfDiscoveryNfProfile{}, err
+		return amf_context.EIRRegistrationInfo{
+			NfInstanceUri: "",
+			EIRApiPrefix:  "",
+		}, err
 	}
 
 	for index := range resp.NfInstances {
-		return resp.NfInstances[index], nil
+		return amf_context.EIRRegistrationInfo{
+			NfInstanceUri: resp.NfInstances[0].NfInstanceId,
+			EIRApiPrefix:  resp.NfInstances[index].NfServices[0].ApiPrefix,
+		}, nil
 	}
-	return models.NrfNfDiscoveryNfProfile{}, nil
+
+	return amf_context.EIRRegistrationInfo{
+		NfInstanceUri: "",
+		EIRApiPrefix:  "",
+	}, errors.New("Not any Eir instance was found")
 }
 
-func (a *AmfApp) createSubscriptionProcedure(eir models.NrfNfDiscoveryNfProfile, uriAmf string) {
+func (a *AmfApp) createEirSubscriptionProcedure(NfInstanceIdEir string, uriAmf string) {
 	subscriptionData := Nnrf_NFManagement.CreateSubscriptionRequest{
 		NrfNfManagementSubscriptionData: &models.NrfNfManagementSubscriptionData{
 			NfStatusNotificationUri: uriAmf + "/namf-loc/v1/nnrf-nfm/v1",
 			SubscrCond: &models.SubscrCond{
-				NfType:       string(eir.NfType),
+				NfType:       string(models.NrfNfManagementNfType__5_G_EIR),
 				ServiceName:  models.ServiceName_N5G_EIR_EIC,
-				NfInstanceId: eir.NfInstanceId,
+				NfInstanceId: NfInstanceIdEir,
 			},
 		},
 	}
@@ -224,7 +232,7 @@ func (a *AmfApp) createSubscriptionProcedure(eir models.NrfNfDiscoveryNfProfile,
 	}
 }
 
-func (a *AmfApp) removeSubscriptionProcedure() {
+func (a *AmfApp) removeEirSubscriptionProcedure() {
 	if eirSubscriptionID := a.eirSubscriptionID; eirSubscriptionID != "" {
 		uri := a.Context().NrfUri
 		configuration := Nnrf_NFManagement.NewConfiguration()
@@ -302,7 +310,7 @@ func (a *AmfApp) terminateProcedure() {
 	a.CallServerStop()
 
 	// deregister with NRF
-	a.removeSubscriptionProcedure()
+	a.removeEirSubscriptionProcedure()
 	problemDetails, err_deg := a.Consumer().SendDeregisterNFInstance()
 	if problemDetails != nil {
 		logger.MainLog.Errorf("Deregister NF instance Failed Problem[%+v]", problemDetails)
