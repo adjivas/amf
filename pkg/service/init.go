@@ -210,7 +210,12 @@ func (a *AmfApp) createSubscriptionProcedure(eir models.NrfNfDiscoveryNfProfile,
 	configuration.SetBasePath(uri)
 	client := Nnrf_NFManagement.NewAPIClient(configuration)
 
-	response, err := client.SubscriptionsCollectionApi.CreateSubscription(context.TODO(), &subscriptionData)
+	ctx, _, err := amf_context.GetSelf().GetTokenCtx(models.ServiceName_NNRF_NFM, models.NrfNfManagementNfType_NRF)
+	if err != nil {
+		logger.MainLog.Errorf("Failed to get NRF token %+v", err)
+	}
+
+	response, err := client.SubscriptionsCollectionApi.CreateSubscription(ctx, &subscriptionData)
 	if err != nil {
 		logger.MainLog.Errorf("Send Subscriptions nRF Eir failed %+v", err)
 	} else {
@@ -229,7 +234,12 @@ func (a *AmfApp) removeSubscriptionProcedure() {
 		request := Nnrf_NFManagement.RemoveSubscriptionRequest{
 			SubscriptionID: &eirSubscriptionID,
 		}
-		response, err := client.SubscriptionIDDocumentApi.RemoveSubscription(context.TODO(), &request)
+
+		ctx, _, err := amf_context.GetSelf().GetTokenCtx(models.ServiceName_NNRF_NFM, models.NrfNfManagementNfType_NRF)
+		if err != nil {
+			logger.MainLog.Errorf("Failed to get NRF token %+v", err)
+		}
+		response, err := client.SubscriptionIDDocumentApi.RemoveSubscription(ctx, &request)
 		if err != nil {
 			logger.MainLog.Errorf("Send RemoveSubscription nRF Eir failed %+v", err)
 		} else {

@@ -16,6 +16,7 @@ configuration:
   # Service-based Interface (SBI) Configuration
   sbi:
     scheme: http # the protocol for sbi (http or https)
+    oauth: true
     registerIP: 127.0.0.18 # IP used to register to NRF
     bindingIP: 127.0.0.18  # IP used to bind the service
     # port: 80 # port used to bind the service
@@ -151,5 +152,5 @@ configuration:
 
 logger: # log output setting
   enable: true # true or false
-  level: info # how detailed to output, value: trace, debug, info, warn, error, fatal, panic
+  level: debug # how detailed to output, value: trace, debug, info, warn, error, fatal, panic
   reportCaller: false # enable the caller report or not, value: true or false

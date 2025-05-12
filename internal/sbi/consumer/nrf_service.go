@@ -82,7 +82,7 @@ func (s *nnrfService) SendSearchNFInstances(nrfUri string, targetNfType, request
 		return nil, openapi.ReportError("nrf not found")
 	}
 
-	ctx, _, err := amf_context.GetSelf().GetTokenCtx(models.ServiceName_NNRF_DISC, models.NrfNfManagementNfType_NRF)
+	ctx, _, err := amf_context.GetSelf().GetTokenCtx(models.ServiceName_NNRF_NFM, models.NrfNfManagementNfType_NRF)
 	if err != nil {
 		return nil, err
 	}
