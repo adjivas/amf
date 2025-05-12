@@ -190,12 +190,14 @@ func (a *AmfApp) SearchEirInstance() (amf_context.EIRRegistrationInfo, error) {
 	}
 
 	for index := range resp.NfInstances {
-		apiPrefix := resp.NfInstances[index].NfServices[0].ApiPrefix
-		nrfUri := factory.AmfConfig.GetNrfUri()
-		return amf_context.EIRRegistrationInfo{
-			NfInstanceUri: nrfUri + "/nnrf-nfm/v1/nf-instances/" + resp.NfInstances[index].NfInstanceId,
-			EIRApiPrefix: apiPrefix,
-		}, nil
+		if len(resp.NfInstances[index].NfServices) > 0 {
+			apiPrefix := resp.NfInstances[index].NfServices[0].ApiPrefix
+			nrfUri := factory.AmfConfig.GetNrfUri()
+			return amf_context.EIRRegistrationInfo{
+				NfInstanceUri: nrfUri + "/nnrf-nfm/v1/nf-instances/" + resp.NfInstances[index].NfInstanceId,
+				EIRApiPrefix: apiPrefix,
+			}, nil
+		}
 	}
 
 	return amf_context.EIRRegistrationInfo{
