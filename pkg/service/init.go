@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	amf_context "github.com/free5gc/amf/internal/context"
+	eir_enum "github.com/free5gc/amf/internal/eir"
 	"github.com/free5gc/amf/internal/logger"
 	"github.com/free5gc/amf/internal/ngap"
 	ngap_message "github.com/free5gc/amf/internal/ngap/message"
@@ -155,7 +156,7 @@ func (a *AmfApp) Start() {
 	}
 
 	// Init Eir
-	if a.Context().EIRChecking == "enabled" || a.Context().EIRChecking == "mandatory" {
+	if a.Context().EIRChecking.Value == eir_enum.EIREnabled || a.Context().EIRChecking.Value == eir_enum.EIRMandatory {
 		EIRRegistrationInfo, err := a.SearchEirInstance()
 		if err != nil {
 			logger.MainLog.Warnf("Search Eir instance failed %+v", err)

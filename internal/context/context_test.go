@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	eir_enum "github.com/free5gc/amf/internal/eir"
 	"github.com/free5gc/amf/pkg/factory"
 	"github.com/free5gc/openapi/models"
 	"github.com/stretchr/testify/assert"
@@ -364,7 +365,7 @@ func TestInitAmfContextWithConfigEirCheckingEnabled(t *testing.T) {
 
 	InitAmfContext(GetSelf())
 
-	assert.Equal(t, amfContext.EIRChecking, "enabled")
+	assert.Equal(t, amfContext.EIRChecking.Value, eir_enum.EIREnabled)
 
 	// Close the config file
 	t.Cleanup(func() {
@@ -395,7 +396,7 @@ func TestInitAmfContextWithConfigEirCheckingMandatory(t *testing.T) {
 
 	InitAmfContext(GetSelf())
 
-	assert.Equal(t, amfContext.EIRChecking, "mandatory")
+	assert.Equal(t, amfContext.EIRChecking.Value, eir_enum.EIRMandatory)
 
 	// Close the config file
 	t.Cleanup(func() {
@@ -426,7 +427,7 @@ func TestInitAmfContextWithConfigEirCheckingDisabled(t *testing.T) {
 
 	InitAmfContext(GetSelf())
 
-	assert.Equal(t, amfContext.EIRChecking, "disabled")
+	assert.Equal(t, amfContext.EIRChecking.Value, eir_enum.EIRDisabled)
 
 	// Close the config file
 	t.Cleanup(func() {
@@ -455,7 +456,7 @@ func TestInitAmfContextWithConfigEirMissing(t *testing.T) {
 
 	InitAmfContext(GetSelf())
 
-	assert.Equal(t, amfContext.EIRChecking, "disabled")
+	assert.Equal(t, amfContext.EIRChecking.Value, eir_enum.EIRDisabled)
 
 	// Close the config file
 	t.Cleanup(func() {
@@ -485,7 +486,7 @@ func TestInitAmfContextWithConfigEirEmpty(t *testing.T) {
 
 	InitAmfContext(GetSelf())
 
-	assert.Equal(t, amfContext.EIRChecking, "disabled")
+	assert.Equal(t, amfContext.EIRChecking.Value, eir_enum.EIRDisabled)
 
 	// Close the config file
 	t.Cleanup(func() {

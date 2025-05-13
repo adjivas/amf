@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	eir_enum "github.com/free5gc/amf/internal/eir"
 	"github.com/free5gc/amf/internal/logger"
 	"github.com/free5gc/amf/pkg/factory"
 	"github.com/free5gc/nas/nasConvert"
@@ -72,7 +73,7 @@ type AMFContext struct {
 	Name                         string
 	NfService                    map[models.ServiceName]models.NrfNfManagementNfService // nfservice that amf support
 	EIRRegistrationInfo          EIRRegistrationInfo
-	EIRChecking                  string
+	EIRChecking                  eir_enum.EirChecking
 	UriScheme                    models.UriScheme
 	BindingIP                    netip.Addr
 	SBIPort                      int
@@ -124,7 +125,10 @@ func InitAmfContext(context *AMFContext) {
 	logger.UtilLog.Infof("amfconfig Info: Version[%s]", config.GetVersion())
 	configuration := config.Configuration
 	context.NfId = uuid.New().String()
-	context.EIRChecking = configuration.Imei.Checking
+
+	context.EIRChecking = eir_enum.EirChecking{
+		Value: eir_enum.Str2EirChecking(configuration.Imei.Checking),
+	}
 	sbi := configuration.Sbi
 	if configuration.AmfName != "" {
 		context.Name = configuration.AmfName

@@ -2,6 +2,7 @@ package gmm
 
 import (
 	amf_context "github.com/free5gc/amf/internal/context"
+	eir_enum "github.com/free5gc/amf/internal/eir"
 	gmm_common "github.com/free5gc/amf/internal/gmm/common"
 	gmm_message "github.com/free5gc/amf/internal/gmm/message"
 	"github.com/free5gc/amf/internal/logger"
@@ -308,9 +309,9 @@ func SecurityMode(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
 				gmmMessage.GetMessageType(), state.Current())
 		}
 
-		if eirChecking := amfUe.ServingAMF().EIRChecking; eirChecking != "" {
+		if eirChecking := amfUe.ServingAMF().EIRChecking; eirChecking.Value != eir_enum.EIRDisabled {
 			eirResponseData, eirError := consumer.GetConsumer().GetEquipementStatus(amfUe.ServingAMF().EIRRegistrationInfo.EIRApiPrefix, amfUe.Pei)
-			if eirChecking == "mandatory" && eirError != nil {
+			if eirChecking.Value == eir_enum.EIRMandatory && eirError != nil {
 				amfUe.GmmLog.Errorf("IMEI mandatory mode rejects the user equipement %s with the EIR error %s", amfUe.Pei, eirError)
 				gmm_message.SendRegistrationReject(amfUe.RanUe[accessType], nasMessage.Cause5GMMUEIdentityCannotBeDerivedByTheNetwork, "")
 				err := GmmFSM.SendEvent(state, SecurityModeFailEvent, fsm.ArgsType{
@@ -320,8 +321,8 @@ func SecurityMode(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
 				if err != nil {
 					logger.GmmLog.Errorln(err)
 				}
-			} else if (eirChecking == "mandatory" || eirChecking == "enabled") && eirResponseData.Status == "BLACKLISTED" {
-				amfUe.GmmLog.Errorf("IMEI %s mode rejects the user equipement %s by the EIR", eirChecking, amfUe.Pei)
+			} else if (eirChecking.Value == eir_enum.EIRMandatory || eirChecking.Value == eir_enum.EIREnabled) && eirResponseData.Status == "BLACKLISTED" {
+				amfUe.GmmLog.Errorf("IMEI %s mode rejects the user equipement %s by the EIR", eir_enum.EirChecking2Str(eirChecking.Value), amfUe.Pei)
 				gmm_message.SendRegistrationReject(amfUe.RanUe[accessType], nasMessage.Cause5GMMIllegalUE, "")
 				err := GmmFSM.SendEvent(state, SecurityModeFailEvent, fsm.ArgsType{
 					ArgAmfUe:      amfUe,
