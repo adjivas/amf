@@ -27,7 +27,6 @@ require (
 )
 
 require (
-	github.com/adjivas/openapi v0.0.0-20250507165019-5bed4eb42ced // indirect
 	github.com/aead/cmac v0.0.0-20160719120800-7af84192f0b1 // indirect
 	github.com/bytedance/sonic v1.11.5 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
