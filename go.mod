@@ -2,7 +2,7 @@ module github.com/free5gc/amf
 
 go 1.21
 
-replace github.com/free5gc/openapi => github.com/adjivas/openapi v0.0.0-20250507153933-f7098224ee4f
+replace github.com/free5gc/openapi => github.com/adjivas/openapi v0.0.0-20250513155714-06a19ba444a8
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
@@ -10,7 +10,7 @@ require (
 	github.com/free5gc/aper v1.0.6-0.20240503143507-2c4c4780b98f
 	github.com/free5gc/nas v1.1.4-0.20241107083120-4605e0d39ece
 	github.com/free5gc/ngap v1.0.9-0.20241107082718-d359a67ebfa2
-	github.com/free5gc/openapi v1.0.9-0.20250102055216-bb5814d1e736
+	github.com/free5gc/openapi v1.1.0
 	github.com/free5gc/sctp v1.0.1
 	github.com/free5gc/util v1.0.6
 	github.com/gin-gonic/gin v1.9.1
@@ -27,7 +27,6 @@ require (
 )
 
 require (
-	github.com/adjivas/openapi v0.0.0-20250507165019-5bed4eb42ced // indirect
 	github.com/aead/cmac v0.0.0-20160719120800-7af84192f0b1 // indirect
 	github.com/bytedance/sonic v1.11.5 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect

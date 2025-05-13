@@ -195,7 +195,7 @@ func (a *AmfApp) SearchEirInstance() (amf_context.EIRRegistrationInfo, error) {
 			nrfUri := factory.AmfConfig.GetNrfUri()
 			return amf_context.EIRRegistrationInfo{
 				NfInstanceUri: nrfUri + "/nnrf-nfm/v1/nf-instances/" + resp.NfInstances[index].NfInstanceId,
-				EIRApiPrefix: apiPrefix,
+				EIRApiPrefix:  apiPrefix,
 			}, nil
 		}
 	}

@@ -1,12 +1,6 @@
 package gmm
 
 import (
-	"context"
-	"io"
-	"net/url"
-	"strings"
-
-	eir_model "github.com/adjivas/openapi/models"
 	amf_context "github.com/free5gc/amf/internal/context"
 	gmm_common "github.com/free5gc/amf/internal/gmm/common"
 	gmm_message "github.com/free5gc/amf/internal/gmm/message"
@@ -17,15 +11,8 @@ import (
 	"github.com/free5gc/nas/nasConvert"
 	"github.com/free5gc/nas/nasMessage"
 	"github.com/free5gc/ngap/ngapType"
-	"github.com/free5gc/openapi"
-	Neir_NFManagement "github.com/free5gc/openapi/eir/NFManagement"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/util/fsm"
-)
-
-const (
-	EirResUriPrefix        = "/n5g-eir-eic/v1"
-	EirResEquipementStatus = "/equipement-status?pei="
 )
 
 func DeRegistered(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
@@ -322,7 +309,7 @@ func SecurityMode(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
 		}
 
 		if eirChecking := amfUe.ServingAMF().EIRChecking; eirChecking != "" {
-			eirResponseData, eirError := getEquipementStatus(amfUe.ServingAMF().EIRRegistrationInfo.EIRApiPrefix, amfUe.Pei)
+			eirResponseData, eirError := consumer.GetConsumer().GetEquipementStatus(amfUe.ServingAMF().EIRRegistrationInfo.EIRApiPrefix, amfUe.Pei)
 			if eirChecking == "mandatory" && eirError != nil {
 				amfUe.GmmLog.Errorf("IMEI mandatory mode rejects the user equipement %s with the EIR error %s", amfUe.Pei, eirError)
 				gmm_message.SendRegistrationReject(amfUe.RanUe[accessType], nasMessage.Cause5GMMUEIdentityCannotBeDerivedByTheNetwork, "")
@@ -356,63 +343,6 @@ func SecurityMode(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
 	default:
 		logger.GmmLog.Errorf("Unknown event [%+v]", event)
 	}
-}
-
-func getEquipementStatus(uri string, imei string) (eir_model.EirResponseData, error) {
-	configuration := Neir_NFManagement.NewConfiguration()
-	configuration.SetBasePath(uri)
-
-	localVarPath := uri + EirResUriPrefix + EirResEquipementStatus + imei
-	logger.GmmLog.Debugf("Request EIR with %+v", localVarPath)
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	localVarFormParams := url.Values{}
-
-	localVarHTTPHeaderAccepts := []string{"application/json", "application/problem+json"}
-	localVarHTTPHeaderAccept := strings.Join(localVarHTTPHeaderAccepts, ", ")
-	if localVarHTTPHeaderAccept != "" {
-		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
-	}
-
-	// body params
-	r, err := openapi.PrepareRequest(context.TODO(), configuration, localVarPath, "GET", nil, localVarHeaderParams, localVarQueryParams, localVarFormParams, "", "", nil)
-	if err != nil {
-		logger.GmmLog.Warnf("AMF can not prepares the request of EIR %+v", err)
-		return eir_model.EirResponseData{}, err
-	}
-
-	localVarHTTPResponse, err := openapi.CallAPI(configuration, r)
-	if err != nil || localVarHTTPResponse == nil {
-		logger.GmmLog.Warnf("AMF can not calls the EIR API %+v, %+v", err, localVarHTTPResponse)
-		return eir_model.EirResponseData{}, err
-	}
-
-	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
-	if err != nil {
-		logger.GmmLog.Warnf("AMF can not reads the EIR Body Response %+v", err)
-		return eir_model.EirResponseData{}, err
-	}
-	err = localVarHTTPResponse.Body.Close()
-	if err != nil {
-		logger.GmmLog.Warnf("AMF can not closes the EIR Body Response %+v", err)
-		return eir_model.EirResponseData{}, err
-	}
-
-	var requestProblemDetails models.ProblemDetails
-	errProblemDetails := openapi.Deserialize(&requestProblemDetails, localVarBody, "application/json")
-	if errProblemDetails == nil {
-		logger.GmmLog.Warnf("EIR received the error %+v for %+v", errProblemDetails, imei)
-		return eir_model.EirResponseData{}, errProblemDetails
-	}
-
-	var requestResponseData eir_model.EirResponseData
-	errResponseData := openapi.Deserialize(&requestResponseData, localVarBody, "application/json")
-	if errResponseData == nil {
-		logger.GmmLog.Infof("EIR provides %+v for %+v", requestResponseData.Status, imei)
-		return requestResponseData, nil
-	}
-	return eir_model.EirResponseData{}, errResponseData
 }
 
 func ContextSetup(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {

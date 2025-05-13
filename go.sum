@@ -1,8 +1,8 @@
 github.com/BurntSushi/toml v1.3.2/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
-github.com/adjivas/openapi v0.0.0-20250507153933-f7098224ee4f h1:tNUbeu7d1LjgFNDRH25bMiLdZdzaC06p41AsHLRSL0c=
-github.com/adjivas/openapi v0.0.0-20250507153933-f7098224ee4f/go.mod h1:Q2vSmc1xpSE9Dy8rbNSWQwv7cFLHbZvKhq528vj6Wbg=
-github.com/adjivas/openapi v0.0.0-20250507165019-5bed4eb42ced h1:3ll6tc1X/t7YFr5FEBRwL9e+F9V7RTbU0c9i6fiN9AY=
-github.com/adjivas/openapi v0.0.0-20250507165019-5bed4eb42ced/go.mod h1:bvg0VkDB2XmNL0BOuJovhAtwntN2GUZRWdM+1d0KDQ4=
+github.com/adjivas/openapi v0.0.0-20250513154444-eb0f20df90c0 h1:gdp7ahQZNxYxl/6ZDYGXcErDabzsjN112oxCmFeCZE8=
+github.com/adjivas/openapi v0.0.0-20250513154444-eb0f20df90c0/go.mod h1:bvg0VkDB2XmNL0BOuJovhAtwntN2GUZRWdM+1d0KDQ4=
+github.com/adjivas/openapi v0.0.0-20250513155714-06a19ba444a8 h1:S5hB/X83VGxHJP8W2TEVK1ZMyD/O3l2DPxPJHhReycQ=
+github.com/adjivas/openapi v0.0.0-20250513155714-06a19ba444a8/go.mod h1:R9FkFsiNeCCn1FxwsInsXg1UASuftqhERW8eZ+2URRA=
 github.com/aead/cmac v0.0.0-20160719120800-7af84192f0b1 h1:+JkXLHME8vLJafGhOH4aoV2Iu8bR55nU6iKMVfYVLjY=
 github.com/aead/cmac v0.0.0-20160719120800-7af84192f0b1/go.mod h1:nuudZmJhzWtx2212z+pkuy7B6nkBqa+xwNXZHL1j8cg=
 github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 h1:DklsrG3dyBCFEj5IhUbnKptjxatkF07cF2ak3yi77so=
