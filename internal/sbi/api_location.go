@@ -28,12 +28,6 @@ func (s *Server) getLocationRoutes() []Route {
 			},
 		},
 		{
-			Name:    "EventEir",
-			Method:  http.MethodPost,
-			Pattern: "/nnrf-nfm/v1",
-			APIFunc: s.HTTPEventEir,
-		},
-		{
 			Name:    "ProvideLocationInfo",
 			Method:  http.MethodPost,
 			Pattern: "/:ueContextId/provide-loc-info",

@@ -43,6 +43,12 @@ func (s *Server) getHttpCallBackRoutes() []Route {
 			Pattern: "/deregistration/:ueid",
 			APIFunc: s.HTTPHandleDeregistrationNotification,
 		},
+		{
+			Name:    "EventEir",
+			Method:  http.MethodPost,
+			Pattern: "/nnrf-nfm/v1",
+			APIFunc: s.HTTPEventEir,
+		},
 	}
 }
 
