@@ -45,7 +45,7 @@ func (s *neirService) GetEquipementStatus(uri string, imei string) (*Neir_EIRSel
 		return nil, openapi.ReportError("eir not found")
 	}
 
-	ctx, _, err := amf_context.GetSelf().GetTokenCtx(models.ServiceName_NSMF_PDUSESSION, models.NrfNfManagementNfType_SMF)
+	ctx, _, err := amf_context.GetSelf().GetTokenCtx(models.ServiceName_N5G_EIR_EIC, models.NrfNfManagementNfType__5_G_EIR)
 	if err != nil {
 		return nil, err
 	}
