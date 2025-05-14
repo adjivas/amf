@@ -52,7 +52,8 @@ func DeRegistered(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
 		}
 	case StartAuthEvent:
 		logger.GmmLog.Debugln(event)
-	case fsm.ExitEvent: logger.GmmLog.Debugln(event)
+	case fsm.ExitEvent:
+		logger.GmmLog.Debugln(event)
 	default:
 		logger.GmmLog.Errorf("Unknown event [%+v]", event)
 	}
