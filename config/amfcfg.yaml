@@ -10,13 +10,13 @@ configuration:
 
   # EIR
   imei:
-    # checking: enabled
-    checking: mandatory
+    checking: enabled
+    # checking: mandatory
 
   # Service-based Interface (SBI) Configuration
   sbi:
     scheme: http # the protocol for sbi (http or https)
-    oauth: false
+    oauth: true
     registerIP: 127.0.0.18 # IP used to register to NRF
     bindingIP: 127.0.0.18  # IP used to bind the service
     # port: 80 # port used to bind the service

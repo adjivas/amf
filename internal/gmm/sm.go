@@ -310,6 +310,7 @@ func SecurityMode(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
 
 		if eirChecking := amfUe.ServingAMF().EIRChecking; eirChecking.Value != eir_enum.EIRDisabled {
 			eirResponseData, eirError := consumer.GetConsumer().GetEquipementStatus(amfUe.ServingAMF().EIRRegistrationInfo.EIRApiPrefix, amfUe.Pei)
+
 			if eirChecking.Value == eir_enum.EIRMandatory && eirError != nil {
 				amfUe.GmmLog.Errorf("IMEI mandatory mode rejects the user equipement %s with the EIR error %s", amfUe.Pei, eirError)
 				gmm_message.SendRegistrationReject(amfUe.RanUe[accessType], nasMessage.Cause5GMMUEIdentityCannotBeDerivedByTheNetwork, "")
@@ -320,7 +321,7 @@ func SecurityMode(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
 				if err != nil {
 					logger.GmmLog.Errorln(err)
 				}
-			} else if (eirChecking.Value == eir_enum.EIRMandatory || eirChecking.Value == eir_enum.EIREnabled) && eirResponseData.Status == "BLACKLISTED" {
+			} else if eirResponseData != nil && eirResponseData.Status == "BLACKLISTED" {
 				amfUe.GmmLog.Errorf("IMEI %s mode rejects the user equipement %s by the EIR", eir_enum.EirChecking2Str(eirChecking.Value), amfUe.Pei)
 				gmm_message.SendRegistrationReject(amfUe.RanUe[accessType], nasMessage.Cause5GMMIllegalUE, "")
 				err := GmmFSM.SendEvent(state, SecurityModeFailEvent, fsm.ArgsType{
