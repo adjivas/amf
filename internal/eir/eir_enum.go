@@ -2,21 +2,17 @@ package context
 
 import (
 	"fmt"
-
-	"github.com/free5gc/aper"
 )
+
+type EirChecking int
 
 const (
-	EIREnabled   aper.Enumerated = 0
-	EIRDisabled  aper.Enumerated = 1
-	EIRMandatory aper.Enumerated = 2
+	EIREnabled   EirChecking = 0
+	EIRDisabled  EirChecking = 1
+	EIRMandatory EirChecking = 2
 )
 
-type EirChecking struct {
-	Value aper.Enumerated `aper:"enabled:0,disabled:1,mandatory:2`
-}
-
-func Str2EirChecking(eirChecking string) aper.Enumerated {
+func Str2EirChecking(eirChecking string) EirChecking {
 	switch eirChecking {
 	case "enabled":
 		return EIREnabled
@@ -31,7 +27,7 @@ func Str2EirChecking(eirChecking string) aper.Enumerated {
 	}
 }
 
-func EirChecking2Str(eirChecking aper.Enumerated) string {
+func EirChecking2Str(eirChecking EirChecking) string {
 	switch eirChecking {
 	case EIREnabled:
 		return "enabled"

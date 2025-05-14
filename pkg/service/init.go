@@ -156,7 +156,7 @@ func (a *AmfApp) Start() {
 	}
 
 	// Init Eir
-	if a.Context().EIRChecking.Value == eir_enum.EIREnabled || a.Context().EIRChecking.Value == eir_enum.EIRMandatory {
+	if a.Context().EIRChecking == eir_enum.EIREnabled || a.Context().EIRChecking == eir_enum.EIRMandatory {
 		EIRRegistrationInfo, err := a.SearchEirInstance()
 		if err != nil {
 			logger.MainLog.Warnf("Search Eir instance failed %+v", err)

@@ -126,9 +126,7 @@ func InitAmfContext(context *AMFContext) {
 	configuration := config.Configuration
 	context.NfId = uuid.New().String()
 
-	context.EIRChecking = eir_enum.EirChecking{
-		Value: eir_enum.Str2EirChecking(configuration.Imei.Checking),
-	}
+	context.EIRChecking = eir_enum.Str2EirChecking(configuration.Imei.Checking)
 	sbi := configuration.Sbi
 	if configuration.AmfName != "" {
 		context.Name = configuration.AmfName
