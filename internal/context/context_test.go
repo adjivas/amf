@@ -365,7 +365,7 @@ func TestInitAmfContextWithConfigEirCheckingEnabled(t *testing.T) {
 
 	InitAmfContext(GetSelf())
 
-	assert.Equal(t, amfContext.EIRChecking.Value, eir_enum.EIREnabled)
+	assert.Equal(t, amfContext.EIRChecking, eir_enum.EIREnabled)
 
 	// Close the config file
 	t.Cleanup(func() {
@@ -396,7 +396,7 @@ func TestInitAmfContextWithConfigEirCheckingMandatory(t *testing.T) {
 
 	InitAmfContext(GetSelf())
 
-	assert.Equal(t, amfContext.EIRChecking.Value, eir_enum.EIRMandatory)
+	assert.Equal(t, amfContext.EIRChecking, eir_enum.EIRMandatory)
 
 	// Close the config file
 	t.Cleanup(func() {
@@ -427,7 +427,7 @@ func TestInitAmfContextWithConfigEirCheckingDisabled(t *testing.T) {
 
 	InitAmfContext(GetSelf())
 
-	assert.Equal(t, amfContext.EIRChecking.Value, eir_enum.EIRDisabled)
+	assert.Equal(t, amfContext.EIRChecking, eir_enum.EIRDisabled)
 
 	// Close the config file
 	t.Cleanup(func() {
@@ -456,7 +456,7 @@ func TestInitAmfContextWithConfigEirMissing(t *testing.T) {
 
 	InitAmfContext(GetSelf())
 
-	assert.Equal(t, amfContext.EIRChecking.Value, eir_enum.EIRDisabled)
+	assert.Equal(t, amfContext.EIRChecking, eir_enum.EIRDisabled)
 
 	// Close the config file
 	t.Cleanup(func() {
@@ -486,7 +486,7 @@ func TestInitAmfContextWithConfigEirEmpty(t *testing.T) {
 
 	InitAmfContext(GetSelf())
 
-	assert.Equal(t, amfContext.EIRChecking.Value, eir_enum.EIRDisabled)
+	assert.Equal(t, amfContext.EIRChecking, eir_enum.EIRDisabled)
 
 	// Close the config file
 	t.Cleanup(func() {
