@@ -308,7 +308,10 @@ func SecurityMode(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
 				gmmMessage.GetMessageType(), state.Current())
 		}
 
+		amfUe.GmmLog.Errorf("ADJIVAS sm.go PASS1 [%+v] [%+v]", amfUe.ServingAMF().EIRChecking, eir_enum.EIRDisabled)
 		if eirChecking := amfUe.ServingAMF().EIRChecking; eirChecking != eir_enum.EIRDisabled {
+			amfUe.GmmLog.Errorf("ADJIVAS sm.go PASS2 [%+v] [%+v]", amfUe.ServingAMF().EIRRegistrationInfo.EIRApiPrefix, amfUe.Pei)
+
 			eirResponseData, eirError := consumer.GetConsumer().GetEquipementStatus(amfUe.ServingAMF().EIRRegistrationInfo.EIRApiPrefix, amfUe.Pei)
 
 			if eirChecking == eir_enum.EIRMandatory && eirError != nil {
@@ -321,8 +324,8 @@ func SecurityMode(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
 				if err != nil {
 					logger.GmmLog.Errorln(err)
 				}
-			} else if eirResponseData != nil && eirResponseData.Status == "BLACKLISTED" {
-				amfUe.GmmLog.Errorf("IMEI %s mode rejects the user equipement %s by the EIR", eir_enum.EirChecking2Str(eirChecking), amfUe.Pei)
+			} else if eirResponseData != nil && eir_enum.Str2EirEquipementStatus(eirResponseData.Status) == eir_enum.EIRBlacklisted {
+				amfUe.GmmLog.Warnf("IMEI %s mode rejects the user equipement %s by the EIR", eir_enum.EirChecking2Str(eirChecking), amfUe.Pei)
 				gmm_message.SendRegistrationReject(amfUe.RanUe[accessType], nasMessage.Cause5GMMIllegalUE, "")
 				err := GmmFSM.SendEvent(state, SecurityModeFailEvent, fsm.ArgsType{
 					ArgAmfUe:      amfUe,

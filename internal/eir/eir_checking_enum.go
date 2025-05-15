@@ -1,15 +1,12 @@
 package context
 
-import (
-	"fmt"
-)
-
 type EirChecking int
 
 const (
 	EIREnabled   EirChecking = 0
 	EIRDisabled  EirChecking = 1
 	EIRMandatory EirChecking = 2
+	EIRUnknown   EirChecking = 3
 )
 
 func Str2EirChecking(eirChecking string) EirChecking {
@@ -23,7 +20,7 @@ func Str2EirChecking(eirChecking string) EirChecking {
 	case "":
 		return EIRDisabled
 	default:
-		panic(fmt.Sprintf("Unknown EirChecking %s", eirChecking))
+		return EIRUnknown
 	}
 }
 
@@ -36,6 +33,6 @@ func EirChecking2Str(eirChecking EirChecking) string {
 	case EIRMandatory:
 		return "mandatory"
 	default:
-		panic(fmt.Sprintf("Unknown EirChecking %d", eirChecking))
+		return ""
 	}
 }

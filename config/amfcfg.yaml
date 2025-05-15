@@ -10,8 +10,8 @@ configuration:
 
   # EIR
   imei:
-    checking: enabled
-    # checking: mandatory
+    # checking: enabled
+    checking: mandatory
 
   # Service-based Interface (SBI) Configuration
   sbi:
