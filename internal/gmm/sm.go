@@ -308,10 +308,7 @@ func SecurityMode(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
 				gmmMessage.GetMessageType(), state.Current())
 		}
 
-		amfUe.GmmLog.Errorf("ADJIVAS sm.go PASS1 [%+v] [%+v]", amfUe.ServingAMF().EIRChecking, eir_enum.EIRDisabled)
 		if eirChecking := amfUe.ServingAMF().EIRChecking; eirChecking != eir_enum.EIRDisabled {
-			amfUe.GmmLog.Errorf("ADJIVAS sm.go PASS2 [%+v] [%+v]", amfUe.ServingAMF().EIRRegistrationInfo.EIRApiPrefix, amfUe.Pei)
-
 			eirResponseData, eirError := consumer.GetConsumer().GetEquipementStatus(amfUe.ServingAMF().EIRRegistrationInfo.EIRApiPrefix, amfUe.Pei)
 
 			if eirChecking == eir_enum.EIRMandatory && eirError != nil {
