@@ -9,7 +9,7 @@ import (
 	"sync"
 
 	amf_context "github.com/free5gc/amf/internal/context"
-	eir_enum "github.com/free5gc/amf/internal/eir"
+	eir "github.com/free5gc/amf/internal/eir"
 	"github.com/free5gc/amf/internal/logger"
 	"github.com/free5gc/amf/internal/ngap"
 	ngap_message "github.com/free5gc/amf/internal/ngap/message"
@@ -156,7 +156,7 @@ func (a *AmfApp) Start() {
 	}
 
 	// Init Eir
-	if a.Context().EIRChecking == eir_enum.EIREnabled || a.Context().EIRChecking == eir_enum.EIRMandatory {
+	if a.Context().EIRChecking == eir.EIREnabled || a.Context().EIRChecking == eir.EIRMandatory {
 		EIRRegistrationInfo, err := a.SearchEirInstance()
 		if err != nil {
 			logger.MainLog.Warnf("Search Eir instance failed %+v", err)
@@ -190,21 +190,31 @@ func (a *AmfApp) SearchEirInstance() (amf_context.EIRRegistrationInfo, error) {
 		}, err
 	}
 
-	for index := range resp.NfInstances {
-		if len(resp.NfInstances[index].NfServices) > 0 {
-			apiPrefix := resp.NfInstances[index].NfServices[0].ApiPrefix
-			nrfUri := factory.AmfConfig.GetNrfUri()
-			return amf_context.EIRRegistrationInfo{
-				NfInstanceUri: nrfUri + "/nnrf-nfm/v1/nf-instances/" + resp.NfInstances[index].NfInstanceId,
-				EIRApiPrefix:  apiPrefix,
-			}, nil
-		}
+	if len(resp.NfInstances) <= 0 {
+		return amf_context.EIRRegistrationInfo{
+			NfInstanceUri: "",
+			EIRApiPrefix:  "",
+		}, errors.New("Not any NfInstances were found")
 	}
+	nfInstance := resp.NfInstances[0]
 
+	if len(nfInstance.NfServices) <= 0 {
+		return amf_context.EIRRegistrationInfo{
+			NfInstanceUri: "",
+			EIRApiPrefix:  "",
+		}, errors.New("Not any NfServices were found")
+	}
+	nfServices := nfInstance.NfServices[0]
+
+	prefix, errPrefix := eir.PrefixFromNfDiscoveryProfile(nfServices)
+	if errPrefix != nil {
+		logger.EIRLog.Warnf("The EIR notification is ignored because it's NfProfile is incorrect [%+v]", errPrefix)
+	}
+	nrfUri := factory.AmfConfig.GetNrfUri()
 	return amf_context.EIRRegistrationInfo{
-		NfInstanceUri: "",
-		EIRApiPrefix:  "",
-	}, errors.New("Not any Eir instance was found")
+		NfInstanceUri: nrfUri + "/nnrf-nfm/v1/nf-instances/" + nfInstance.NfInstanceId,
+		EIRApiPrefix: prefix + nfInstance.NfInstanceId,
+	}, nil
 }
 
 func (a *AmfApp) createEirSubscriptionProcedure(NfInstanceIdEir string, uriAmf string) {

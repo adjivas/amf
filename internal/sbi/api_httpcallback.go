@@ -3,6 +3,7 @@ package sbi
 import (
 	"net/http"
 
+	eir_url "github.com/free5gc/amf/internal/eir"
 	amf_context "github.com/free5gc/amf/internal/context"
 	"github.com/free5gc/amf/internal/logger"
 	"github.com/free5gc/openapi"
@@ -319,6 +320,7 @@ func (s *Server) HTTPEventEir(c *gin.Context) {
 		logger.EIRLog.Warnf("AMF receives malformed [%+v] EIR notification: [%+v]", requestNotificationData.Event, requestNotificationData)
 		c.JSON(http.StatusNoContent, nil)
 	}
+
 	switch event := requestNotificationData.Event; event {
 	case "NF_DEREGISTERED":
 		logger.EIRLog.Infof("AMF receives %+v deregistration EIR notification", requestNotificationData.NfInstanceUri)
@@ -343,8 +345,13 @@ func (s *Server) HTTPEventEir(c *gin.Context) {
 			logger.EIRLog.Warnf("This EIR notification is ignored because the AMF hasn't one NfProfile from %+v EIR", s.ServerAmf.Context().EIRRegistrationInfo.NfInstanceUri)
 			break
 		}
+		prefix, errPrefix := eir_url.PrefixFromNfProfile(requestNotificationData.NfProfile.NfServices[0])
+		if errPrefix != nil {
+			logger.EIRLog.Warnf("The EIR notification is ignored because it's NfProfile is incorrect [%+v]", errPrefix)
+			break
+		}
 		s.ServerAmf.Context().EIRRegistrationInfo.NfInstanceUri = requestNotificationData.NfInstanceUri
-		s.ServerAmf.Context().EIRRegistrationInfo.EIRApiPrefix = requestNotificationData.NfProfile.NfServices[0].ApiPrefix
+		s.ServerAmf.Context().EIRRegistrationInfo.EIRApiPrefix = prefix + requestNotificationData.NfInstanceUri
 		logger.EIRLog.Debugf("The AMF's EIR is set to: [%+v]", requestNotificationData.NfInstanceUri)
 	default:
 		logger.EIRLog.Warnf("This EIR notification is ignored because the AMF has the %+v EIR", s.ServerAmf.Context().EIRRegistrationInfo.NfInstanceUri)
