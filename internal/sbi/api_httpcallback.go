@@ -3,8 +3,8 @@ package sbi
 import (
 	"net/http"
 
-	eir_url "github.com/free5gc/amf/internal/eir"
 	amf_context "github.com/free5gc/amf/internal/context"
+	eir_url "github.com/free5gc/amf/internal/eir"
 	"github.com/free5gc/amf/internal/logger"
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
@@ -351,8 +351,8 @@ func (s *Server) HTTPEventEir(c *gin.Context) {
 			break
 		}
 		s.ServerAmf.Context().EIRRegistrationInfo.NfInstanceUri = requestNotificationData.NfInstanceUri
-		s.ServerAmf.Context().EIRRegistrationInfo.EIRApiPrefix = prefix + requestNotificationData.NfInstanceUri
-		logger.EIRLog.Debugf("The AMF's EIR is set to: [%+v]", requestNotificationData.NfInstanceUri)
+		s.ServerAmf.Context().EIRRegistrationInfo.EIRApiPrefix = prefix
+		logger.EIRLog.Infof("The AMF's EIR is set to: [%+v] from [%+v]", s.ServerAmf.Context().EIRRegistrationInfo.EIRApiPrefix, s.ServerAmf.Context().EIRRegistrationInfo.NfInstanceUri)
 	default:
 		logger.EIRLog.Warnf("This EIR notification is ignored because the AMF has the %+v EIR", s.ServerAmf.Context().EIRRegistrationInfo.NfInstanceUri)
 	}

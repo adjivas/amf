@@ -29,7 +29,7 @@ func PrefixFromNfDiscoveryProfile(nfService models.NrfNfDiscoveryNfService) (str
 
 	bindAddr := netip.AddrPortFrom(addr, uint16(ipEndPoint.Port)).String()
 
-	eirUrl := string(nfService.Scheme) + "://" + bindAddr + "/nnrf-nfm/v1/nf-instances/"
+	eirUrl := string(nfService.Scheme) + "://" + bindAddr
 	return eirUrl, nil
 }
 

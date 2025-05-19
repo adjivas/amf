@@ -161,8 +161,8 @@ func (a *AmfApp) Start() {
 		if err != nil {
 			logger.MainLog.Warnf("Search Eir instance failed %+v", err)
 		} else {
-			logger.InitLog.Infof("Select the Eir instance [%+v]", EIRRegistrationInfo.NfInstanceUri)
 			a.Context().EIRRegistrationInfo = EIRRegistrationInfo
+			logger.InitLog.Infof("Select the Eir instance [%+v] from [%+v]", EIRRegistrationInfo.EIRApiPrefix, EIRRegistrationInfo.NfInstanceUri)
 		}
 
 		uriAmf := a.Context().GetIPUri()
@@ -213,7 +213,7 @@ func (a *AmfApp) SearchEirInstance() (amf_context.EIRRegistrationInfo, error) {
 	nrfUri := factory.AmfConfig.GetNrfUri()
 	return amf_context.EIRRegistrationInfo{
 		NfInstanceUri: nrfUri + "/nnrf-nfm/v1/nf-instances/" + nfInstance.NfInstanceId,
-		EIRApiPrefix: prefix + nfInstance.NfInstanceId,
+		EIRApiPrefix:  prefix,
 	}, nil
 }
 
