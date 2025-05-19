@@ -9,7 +9,7 @@ import (
 	"sync"
 
 	amf_context "github.com/free5gc/amf/internal/context"
-	eir_enum "github.com/free5gc/amf/internal/eir"
+	eir "github.com/free5gc/amf/internal/eir"
 	"github.com/free5gc/amf/internal/logger"
 	"github.com/free5gc/amf/internal/ngap"
 	ngap_message "github.com/free5gc/amf/internal/ngap/message"
@@ -20,6 +20,7 @@ import (
 	callback "github.com/free5gc/amf/internal/sbi/processor/notifier"
 	"github.com/free5gc/amf/pkg/app"
 	"github.com/free5gc/amf/pkg/factory"
+	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	Nnrf_NFDiscovery "github.com/free5gc/openapi/nrf/NFDiscovery"
 	Nnrf_NFManagement "github.com/free5gc/openapi/nrf/NFManagement"
@@ -156,13 +157,13 @@ func (a *AmfApp) Start() {
 	}
 
 	// Init Eir
-	if a.Context().EIRChecking == eir_enum.EIREnabled || a.Context().EIRChecking == eir_enum.EIRMandatory {
+	if a.Context().EIRChecking == eir.EIREnabled || a.Context().EIRChecking == eir.EIRMandatory {
 		EIRRegistrationInfo, err := a.SearchEirInstance()
 		if err != nil {
 			logger.MainLog.Warnf("Search Eir instance failed %+v", err)
 		} else {
-			logger.InitLog.Infof("Select the Eir instance [%+v]", EIRRegistrationInfo.NfInstanceUri)
 			a.Context().EIRRegistrationInfo = EIRRegistrationInfo
+			logger.InitLog.Infof("Select the Eir instance [%+v] from [%+v]", EIRRegistrationInfo.EIRApiPrefix, EIRRegistrationInfo.NfInstanceUri)
 		}
 
 		uriAmf := a.Context().GetIPUri()
@@ -190,21 +191,22 @@ func (a *AmfApp) SearchEirInstance() (amf_context.EIRRegistrationInfo, error) {
 		}, err
 	}
 
-	for index := range resp.NfInstances {
-		if len(resp.NfInstances[index].NfServices) > 0 {
-			apiPrefix := resp.NfInstances[index].NfServices[0].ApiPrefix
-			nrfUri := factory.AmfConfig.GetNrfUri()
-			return amf_context.EIRRegistrationInfo{
-				NfInstanceUri: nrfUri + "/nnrf-nfm/v1/nf-instances/" + resp.NfInstances[index].NfInstanceId,
-				EIRApiPrefix:  apiPrefix,
-			}, nil
-		}
+	if len(resp.NfInstances) <= 0 {
+		return amf_context.EIRRegistrationInfo{
+			NfInstanceUri: "",
+			EIRApiPrefix:  "",
+		}, errors.New("Not any NfInstances were found")
 	}
 
+	nfProfile, eirUri, errProfile := openapi.GetServiceNfProfileAndUri(resp.NfInstances, models.ServiceName_N5G_EIR_EIC)
+	if errProfile != nil {
+		logger.EIRLog.Warnf("The EIR notification is ignored because it's NfProfile is incorrect [%+v]", errProfile)
+	}
+	nrfUri := factory.AmfConfig.GetNrfUri()
 	return amf_context.EIRRegistrationInfo{
-		NfInstanceUri: "",
-		EIRApiPrefix:  "",
-	}, errors.New("Not any Eir instance was found")
+		NfInstanceUri: nrfUri + "/nnrf-nfm/v1/nf-instances/" + nfProfile.NfInstanceId,
+		EIRApiPrefix:  eirUri,
+	}, nil
 }
 
 func (a *AmfApp) createEirSubscriptionProcedure(NfInstanceIdEir string, uriAmf string) {

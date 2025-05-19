@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	amf_context "github.com/free5gc/amf/internal/context"
+	eir_url "github.com/free5gc/amf/internal/eir"
 	"github.com/free5gc/amf/internal/logger"
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
@@ -319,6 +320,7 @@ func (s *Server) HTTPEventEir(c *gin.Context) {
 		logger.EIRLog.Warnf("AMF receives malformed [%+v] EIR notification: [%+v]", requestNotificationData.Event, requestNotificationData)
 		c.JSON(http.StatusNoContent, nil)
 	}
+
 	switch event := requestNotificationData.Event; event {
 	case "NF_DEREGISTERED":
 		logger.EIRLog.Infof("AMF receives %+v deregistration EIR notification", requestNotificationData.NfInstanceUri)
@@ -339,13 +341,14 @@ func (s *Server) HTTPEventEir(c *gin.Context) {
 			logger.EIRLog.Warnf("This EIR notification is ignored because the AMF has the %+v EIR", s.ServerAmf.Context().EIRRegistrationInfo.NfInstanceUri)
 			break
 		}
-		if len(requestNotificationData.NfProfile.NfServices) <= 0 {
-			logger.EIRLog.Warnf("This EIR notification is ignored because the AMF hasn't one NfProfile from %+v EIR", s.ServerAmf.Context().EIRRegistrationInfo.NfInstanceUri)
+		uri, errPrefix := eir_url.GetServiceNfUri(requestNotificationData.NfProfile)
+		if errPrefix != nil {
+			logger.EIRLog.Warnf("The EIR notification is ignored because it's NfProfile is incorrect [%+v]", errPrefix)
 			break
 		}
 		s.ServerAmf.Context().EIRRegistrationInfo.NfInstanceUri = requestNotificationData.NfInstanceUri
-		s.ServerAmf.Context().EIRRegistrationInfo.EIRApiPrefix = requestNotificationData.NfProfile.NfServices[0].ApiPrefix
-		logger.EIRLog.Debugf("The AMF's EIR is set to: [%+v]", requestNotificationData.NfInstanceUri)
+		s.ServerAmf.Context().EIRRegistrationInfo.EIRApiPrefix = uri
+		logger.EIRLog.Infof("The AMF's EIR is set to: [%+v] from [%+v]", s.ServerAmf.Context().EIRRegistrationInfo.EIRApiPrefix, s.ServerAmf.Context().EIRRegistrationInfo.NfInstanceUri)
 	default:
 		logger.EIRLog.Warnf("This EIR notification is ignored because the AMF has the %+v EIR", s.ServerAmf.Context().EIRRegistrationInfo.NfInstanceUri)
 	}
