@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	amf_context "github.com/free5gc/amf/internal/context"
-	eir_url "github.com/free5gc/amf/internal/eir"
 	"github.com/free5gc/amf/internal/logger"
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
@@ -341,7 +340,7 @@ func (s *Server) HTTPEventEir(c *gin.Context) {
 			logger.EIRLog.Warnf("This EIR notification is ignored because the AMF has the %+v EIR", s.ServerAmf.Context().EIRRegistrationInfo.NfInstanceUri)
 			break
 		}
-		uri, errPrefix := eir_url.GetServiceNfUri(requestNotificationData.NfProfile)
+		uri, errPrefix := openapi.GetManagementNfUri(requestNotificationData.NfProfile)
 		if errPrefix != nil {
 			logger.EIRLog.Warnf("The EIR notification is ignored because it's NfProfile is incorrect [%+v]", errPrefix)
 			break
