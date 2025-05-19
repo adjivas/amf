@@ -198,14 +198,14 @@ func (a *AmfApp) SearchEirInstance() (amf_context.EIRRegistrationInfo, error) {
 		}, errors.New("Not any NfInstances were found")
 	}
 
-	nfProfile, uri, errProfile := openapi.GetServiceNfProfileAndUri(resp.NfInstances, models.ServiceName_N5G_EIR_EIC)
+	nfProfile, eirUri, errProfile := openapi.GetServiceNfProfileAndUri(resp.NfInstances, models.ServiceName_N5G_EIR_EIC)
 	if errProfile != nil {
 		logger.EIRLog.Warnf("The EIR notification is ignored because it's NfProfile is incorrect [%+v]", errProfile)
 	}
 	nrfUri := factory.AmfConfig.GetNrfUri()
 	return amf_context.EIRRegistrationInfo{
 		NfInstanceUri: nrfUri + "/nnrf-nfm/v1/nf-instances/" + nfProfile.NfInstanceId,
-		EIRApiPrefix:  uri,
+		EIRApiPrefix:  eirUri,
 	}, nil
 }
 
