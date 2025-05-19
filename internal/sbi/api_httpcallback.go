@@ -341,17 +341,13 @@ func (s *Server) HTTPEventEir(c *gin.Context) {
 			logger.EIRLog.Warnf("This EIR notification is ignored because the AMF has the %+v EIR", s.ServerAmf.Context().EIRRegistrationInfo.NfInstanceUri)
 			break
 		}
-		if len(requestNotificationData.NfProfile.NfServices) <= 0 {
-			logger.EIRLog.Warnf("This EIR notification is ignored because the AMF hasn't one NfProfile from %+v EIR", s.ServerAmf.Context().EIRRegistrationInfo.NfInstanceUri)
-			break
-		}
-		prefix, errPrefix := eir_url.PrefixFromNfProfile(requestNotificationData.NfProfile.NfServices[0])
+		uri, errPrefix := eir_url.GetServiceNfUri(requestNotificationData.NfProfile)
 		if errPrefix != nil {
 			logger.EIRLog.Warnf("The EIR notification is ignored because it's NfProfile is incorrect [%+v]", errPrefix)
 			break
 		}
 		s.ServerAmf.Context().EIRRegistrationInfo.NfInstanceUri = requestNotificationData.NfInstanceUri
-		s.ServerAmf.Context().EIRRegistrationInfo.EIRApiPrefix = prefix
+		s.ServerAmf.Context().EIRRegistrationInfo.EIRApiPrefix = uri
 		logger.EIRLog.Infof("The AMF's EIR is set to: [%+v] from [%+v]", s.ServerAmf.Context().EIRRegistrationInfo.EIRApiPrefix, s.ServerAmf.Context().EIRRegistrationInfo.NfInstanceUri)
 	default:
 		logger.EIRLog.Warnf("This EIR notification is ignored because the AMF has the %+v EIR", s.ServerAmf.Context().EIRRegistrationInfo.NfInstanceUri)

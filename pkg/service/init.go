@@ -20,6 +20,7 @@ import (
 	callback "github.com/free5gc/amf/internal/sbi/processor/notifier"
 	"github.com/free5gc/amf/pkg/app"
 	"github.com/free5gc/amf/pkg/factory"
+	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	Nnrf_NFDiscovery "github.com/free5gc/openapi/nrf/NFDiscovery"
 	Nnrf_NFManagement "github.com/free5gc/openapi/nrf/NFManagement"
@@ -196,24 +197,15 @@ func (a *AmfApp) SearchEirInstance() (amf_context.EIRRegistrationInfo, error) {
 			EIRApiPrefix:  "",
 		}, errors.New("Not any NfInstances were found")
 	}
-	nfInstance := resp.NfInstances[0]
 
-	if len(nfInstance.NfServices) <= 0 {
-		return amf_context.EIRRegistrationInfo{
-			NfInstanceUri: "",
-			EIRApiPrefix:  "",
-		}, errors.New("Not any NfServices were found")
-	}
-	nfServices := nfInstance.NfServices[0]
-
-	prefix, errPrefix := eir.PrefixFromNfDiscoveryProfile(nfServices)
-	if errPrefix != nil {
-		logger.EIRLog.Warnf("The EIR notification is ignored because it's NfProfile is incorrect [%+v]", errPrefix)
+	nfProfile, uri, errProfile := openapi.GetServiceNfProfileAndUri(resp.NfInstances, models.ServiceName_N5G_EIR_EIC)
+	if errProfile != nil {
+		logger.EIRLog.Warnf("The EIR notification is ignored because it's NfProfile is incorrect [%+v]", errProfile)
 	}
 	nrfUri := factory.AmfConfig.GetNrfUri()
 	return amf_context.EIRRegistrationInfo{
-		NfInstanceUri: nrfUri + "/nnrf-nfm/v1/nf-instances/" + nfInstance.NfInstanceId,
-		EIRApiPrefix:  prefix,
+		NfInstanceUri: nrfUri + "/nnrf-nfm/v1/nf-instances/" + nfProfile.NfInstanceId,
+		EIRApiPrefix:  uri,
 	}, nil
 }
 

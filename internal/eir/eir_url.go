@@ -2,43 +2,84 @@ package context
 
 import (
 	"errors"
+	"math/rand"
 	"net/netip"
 
 	"github.com/free5gc/openapi/models"
 )
 
-func PrefixFromAnyProfile(ipEndPoints []models.IpEndPoint, scheme string) (string, error) {
-	if len(ipEndPoints) <= 0 {
-		return "", errors.New("The nfServices doesn't have a IpEndPoint ")
-	}
-
-	ipEndPoint := ipEndPoints[0]
-
-	var addrStr string
-	if Ipv6Address := ipEndPoint.Ipv6Address; Ipv6Address != "" {
-		addrStr = Ipv6Address
-	} else if Ipv4Address := ipEndPoint.Ipv4Address; Ipv4Address != "" {
-		addrStr = Ipv4Address
-	} else {
-		return "", errors.New("The nfServices IpEndPoint doesn't have a IP address")
-	}
-
+func getUriFromIpStr(scheme models.UriScheme, addrStr string, port int32) (string, error) {
 	addr, err := netip.ParseAddr(addrStr)
 	if err != nil {
 		return "", err
 	}
 
-	bindAddr := netip.AddrPortFrom(addr, uint16(ipEndPoint.Port)).String()
+	portSelected := uint16(port)
+	if port == 0 {
+		switch scheme {
+		case models.UriScheme_HTTPS:
+			portSelected = 443
+		case models.UriScheme_HTTP:
+			portSelected = 80
+		default:
+			return "", errors.New("no port for found")
+		}
+	}
+
+	bindAddr := netip.AddrPortFrom(addr, portSelected).String()
 
 	eirUrl := string(scheme) + "://" + bindAddr
 
 	return eirUrl, nil
 }
 
-func PrefixFromNfDiscoveryProfile(nfService models.NrfNfDiscoveryNfService) (string, error) {
-	return PrefixFromAnyProfile(nfService.IpEndPoints, string(nfService.Scheme))
+func GetServiceNfUriFromIP(nfProfile *models.NrfNfManagementNfProfile, service models.NrfNfManagementNfService) (string, error) {
+	// Get IP from NFService
+	ipEndPointsLen := len(service.IpEndPoints)
+	ipEndPointSelect := rand.Intn(ipEndPointsLen)
+	ipEndPoint := service.IpEndPoints[ipEndPointSelect]
+
+	if ipEndPoint.Ipv6Address != "" {
+		return getUriFromIpStr(service.Scheme, ipEndPoint.Ipv6Address, ipEndPoint.Port)
+	}
+	if ipEndPoint.Ipv4Address != "" {
+		return getUriFromIpStr(service.Scheme, ipEndPoint.Ipv4Address, ipEndPoint.Port)
+	}
+	// Get IP from NFProfile parent's NFService
+	ipAddr6Len := len(nfProfile.Ipv4Addresses)
+	ipAddr6Select := rand.Intn(ipAddr6Len)
+	ipAddr6 := nfProfile.Ipv4Addresses[ipAddr6Select]
+	if ipAddr6 != "" {
+		return getUriFromIpStr(service.Scheme, ipAddr6, ipEndPoint.Port)
+	}
+
+	ipAddr4Len := len(nfProfile.Ipv4Addresses)
+	ipAddr4Select := rand.Intn(ipAddr4Len)
+	ipAddr4 := nfProfile.Ipv4Addresses[ipAddr4Select]
+	if ipAddr4 != "" {
+		return getUriFromIpStr(service.Scheme, ipAddr4, ipEndPoint.Port)
+	}
+
+	return "", errors.New("no uri found")
 }
 
-func PrefixFromNfProfile(nfService models.NrfNfManagementNfService) (string, error) {
-	return PrefixFromAnyProfile(nfService.IpEndPoints, string(nfService.Scheme))
+func GetServiceNfUri(nfProfile *models.NrfNfManagementNfProfile) (string, error) {
+	var nfUri string
+	for index := range nfProfile.NfServices {
+		service := nfProfile.NfServices[index]
+		if service.Fqdn != "" {
+			nfUri = string(service.Scheme) + "://" + service.Fqdn
+		} else if nfProfile.Fqdn != "" {
+			nfUri = string(service.Scheme) + "://" + nfProfile.Fqdn
+		} else if len(service.IpEndPoints) != 0 {
+			nfUri, _ = GetServiceNfUriFromIP(nfProfile, service)
+		}
+		if nfUri != "" {
+			break
+		}
+	}
+	if nfUri == "" {
+		return "", errors.New("no uri found")
+	}
+	return nfUri, nil
 }
