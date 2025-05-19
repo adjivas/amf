@@ -361,11 +361,9 @@ severity:
   #
   # Default: ""
   default-severity: error
-  
   # The default value is false.
   # If set to true severity-rules regular expressions become case sensitive.
   case-sensitive: false
-
   # When a list of severity rules are provided, severity information will be added to lint issues.
   # Severity rules have the same filtering capability as exclude rules
   # except you are allowed to specify one matcher per severity rule.
@@ -377,5 +375,5 @@ severity:
   # Default: []
   rules:
     - linters:
-      - gomnd
-      severity: info
+        - gomnd
+      severity: ignore
