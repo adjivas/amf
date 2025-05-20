@@ -373,4 +373,4 @@ severity:
   rules:
     - linters:
         - gomnd
-      severity: ignore
+      severity: info
