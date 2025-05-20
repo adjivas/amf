@@ -41,7 +41,7 @@ func FuzzHandleNAS(f *testing.F) {
 
 	msg := nas.NewMessage()
 	msg.GmmMessage = nas.NewGmmMessage()
-	msg.GmmMessage.GmmHeader.SetMessageType(nas.MsgTypeRegistrationRequest)
+	msg.GmmMessage.SetMessageType(nas.MsgTypeRegistrationRequest)
 	msg.RegistrationRequest = nasMessage.NewRegistrationRequest(nas.MsgTypeRegistrationRequest)
 	reg := msg.RegistrationRequest
 	reg.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
@@ -64,7 +64,7 @@ func FuzzHandleNAS(f *testing.F) {
 
 	msg = nas.NewMessage()
 	msg.GmmMessage = nas.NewGmmMessage()
-	msg.GmmMessage.GmmHeader.SetMessageType(nas.MsgTypeDeregistrationRequestUEOriginatingDeregistration)
+	msg.GmmHeader.SetMessageType(nas.MsgTypeDeregistrationRequestUEOriginatingDeregistration)
 	deReg := nasMessage.NewDeregistrationRequestUEOriginatingDeregistration(
 		nas.MsgTypeDeregistrationRequestUEOriginatingDeregistration)
 	msg.DeregistrationRequestUEOriginatingDeregistration = deReg
@@ -83,7 +83,7 @@ func FuzzHandleNAS(f *testing.F) {
 
 	msg = nas.NewMessage()
 	msg.GmmMessage = nas.NewGmmMessage()
-	msg.GmmMessage.GmmHeader.SetMessageType(nas.MsgTypeServiceRequest)
+	msg.GmmHeader.SetMessageType(nas.MsgTypeServiceRequest)
 	msg.ServiceRequest = nasMessage.NewServiceRequest(nas.MsgTypeServiceRequest)
 	sr := msg.ServiceRequest
 	sr.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
@@ -136,7 +136,7 @@ func FuzzHandleNAS2(f *testing.F) {
 
 	msg := nas.NewMessage()
 	msg.GmmMessage = nas.NewGmmMessage()
-	msg.GmmMessage.GmmHeader.SetMessageType(nas.MsgTypeRegistrationRequest)
+	msg.GmmHeader.SetMessageType(nas.MsgTypeRegistrationRequest)
 	msg.RegistrationRequest = nasMessage.NewRegistrationRequest(nas.MsgTypeRegistrationRequest)
 	reg := msg.RegistrationRequest
 	reg.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
@@ -158,7 +158,7 @@ func FuzzHandleNAS2(f *testing.F) {
 
 	msg = nas.NewMessage()
 	msg.GmmMessage = nas.NewGmmMessage()
-	msg.GmmMessage.GmmHeader.SetMessageType(nas.MsgTypeIdentityResponse)
+	msg.GmmHeader.SetMessageType(nas.MsgTypeIdentityResponse)
 	msg.IdentityResponse = nasMessage.NewIdentityResponse(nas.MsgTypeIdentityResponse)
 	ir := msg.IdentityResponse
 	ir.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
@@ -172,7 +172,7 @@ func FuzzHandleNAS2(f *testing.F) {
 
 	msg = nas.NewMessage()
 	msg.GmmMessage = nas.NewGmmMessage()
-	msg.GmmMessage.GmmHeader.SetMessageType(nas.MsgTypeAuthenticationResponse)
+	msg.GmmHeader.SetMessageType(nas.MsgTypeAuthenticationResponse)
 	msg.AuthenticationResponse = nasMessage.NewAuthenticationResponse(nas.MsgTypeAuthenticationResponse)
 	ar := msg.AuthenticationResponse
 	ar.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
@@ -187,7 +187,7 @@ func FuzzHandleNAS2(f *testing.F) {
 
 	msg = nas.NewMessage()
 	msg.GmmMessage = nas.NewGmmMessage()
-	msg.GmmMessage.GmmHeader.SetMessageType(nas.MsgTypeAuthenticationFailure)
+	msg.GmmHeader.SetMessageType(nas.MsgTypeAuthenticationFailure)
 	msg.AuthenticationFailure = nasMessage.NewAuthenticationFailure(nas.MsgTypeAuthenticationFailure)
 	af := msg.AuthenticationFailure
 	af.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
@@ -203,7 +203,7 @@ func FuzzHandleNAS2(f *testing.F) {
 
 	msg = nas.NewMessage()
 	msg.GmmMessage = nas.NewGmmMessage()
-	msg.GmmMessage.GmmHeader.SetMessageType(nas.MsgTypeStatus5GMM)
+	msg.GmmHeader.SetMessageType(nas.MsgTypeStatus5GMM)
 	msg.Status5GMM = nasMessage.NewStatus5GMM(nas.MsgTypeStatus5GMM)
 	st := msg.Status5GMM
 	st.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)

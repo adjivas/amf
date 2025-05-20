@@ -30,7 +30,7 @@ func Encode(ue *context.AmfUe, msg *nas.Message, accessType models.AccessType) (
 				return nil,
 					fmt.Errorf("identity Request (type unknown) is requierd security, but security context is not available")
 			}
-			if identityType := msg.GmmMessage.IdentityRequest.SpareHalfOctetAndIdentityType.GetTypeOfIdentity(); identityType !=
+			if identityType := msg.SpareHalfOctetAndIdentityType.GetTypeOfIdentity(); identityType !=
 				nasMessage.MobileIdentity5GSTypeSuci {
 				return nil,
 					fmt.Errorf("identity Request (%d) is requierd security, but security context is not available", identityType)

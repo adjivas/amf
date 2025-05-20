@@ -62,11 +62,12 @@ func GetNas5GSMobileIdentity(gmmMessage *nas.GmmMessage) (string, string, error)
 	var err error
 	var mobileId, mobileIdType string
 
-	if gmmMessage.GetMessageType() == nas.MsgTypeRegistrationRequest {
+	switch gmmMessage.GetMessageType() {
+	case nas.MsgTypeRegistrationRequest:
 		mobileId, mobileIdType, err = gmmMessage.RegistrationRequest.GetMobileIdentity()
-	} else if gmmMessage.GetMessageType() == nas.MsgTypeServiceRequest {
-		mobileId, mobileIdType, err = gmmMessage.ServiceRequest.TMSI5GS.Get5GSTMSI()
-	} else {
+	case nas.MsgTypeServiceRequest:
+		mobileId, mobileIdType, err = gmmMessage.TMSI5GS.Get5GSTMSI()
+	default:
 		err = fmt.Errorf("gmmMessageType: [%d] is not RegistrationRequest or ServiceRequest",
 			gmmMessage.GetMessageType())
 	}

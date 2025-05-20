@@ -16,11 +16,12 @@ func (p *Processor) HandleCreateAMFEventSubscription(c *gin.Context,
 	createEventSubscription models.AmfCreateEventSubscription,
 ) {
 	createdEventSubscription, problemDetails := p.CreateAMFEventSubscriptionProcedure(createEventSubscription)
-	if createdEventSubscription != nil {
+	switch {
+	case createdEventSubscription != nil:
 		c.JSON(http.StatusCreated, createdEventSubscription)
-	} else if problemDetails != nil {
+	case problemDetails != nil:
 		c.JSON(int(problemDetails.Status), problemDetails)
-	} else {
+	default:
 		problemDetails = &models.ProblemDetails{
 			Status: http.StatusInternalServerError,
 			Cause:  "UNSPECIFIED_NF_FAILURE",
@@ -104,7 +105,8 @@ func (p *Processor) CreateAMFEventSubscriptionProcedure(createEventSubscription 
 		}
 	}
 
-	if subscription.AnyUE {
+	switch {
+	case subscription.AnyUE:
 		contextEventSubscription.IsAnyUe = true
 		ueEventSubscription.AnyUe = true
 		amfSelf.UePool.Range(func(key, value interface{}) bool {
@@ -116,7 +118,7 @@ func (p *Processor) CreateAMFEventSubscriptionProcedure(createEventSubscription 
 			ue.Lock.Unlock()
 			return true
 		})
-	} else if subscription.GroupId != "" {
+	case subscription.GroupId != "":
 		contextEventSubscription.IsGroupUe = true
 		ueEventSubscription.AnyUe = true
 		amfSelf.UePool.Range(func(key, value interface{}) bool {
@@ -130,7 +132,7 @@ func (p *Processor) CreateAMFEventSubscriptionProcedure(createEventSubscription 
 			ue.Lock.Unlock()
 			return true
 		})
-	} else {
+	default:
 		if ue, ok := amfSelf.AmfUeFindBySupi(subscription.Supi); !ok {
 			problemDetails := &models.ProblemDetails{
 				Status: http.StatusForbidden,
@@ -158,7 +160,8 @@ func (p *Processor) CreateAMFEventSubscriptionProcedure(createEventSubscription 
 	createdEventSubscription.SubscriptionId = newSubscriptionID
 
 	// for immediate use
-	if subscription.AnyUE {
+	switch {
+	case subscription.AnyUE:
 		amfSelf.UePool.Range(func(key, value interface{}) bool {
 			ue := value.(*context.AmfUe)
 			ue.Lock.Lock()
@@ -181,7 +184,7 @@ func (p *Processor) CreateAMFEventSubscriptionProcedure(createEventSubscription 
 			}
 			return true
 		})
-	} else if subscription.GroupId != "" {
+	case subscription.GroupId != "":
 		amfSelf.UePool.Range(func(key, value interface{}) bool {
 			ue := value.(*context.AmfUe)
 			ue.Lock.Lock()
@@ -206,7 +209,7 @@ func (p *Processor) CreateAMFEventSubscriptionProcedure(createEventSubscription 
 			}
 			return true
 		})
-	} else {
+	default:
 		ue, _ := amfSelf.AmfUeFindBySupi(subscription.Supi)
 		ue.Lock.Lock()
 		defer ue.Lock.Unlock()
@@ -283,11 +286,12 @@ func (p *Processor) HandleModifyAMFEventSubscription(c *gin.Context,
 
 	updatedEventSubscription, problemDetails := p.
 		ModifyAMFEventSubscriptionProcedure(subscriptionID, modifySubscriptionRequest)
-	if updatedEventSubscription != nil {
+	switch {
+	case updatedEventSubscription != nil:
 		c.JSON(http.StatusOK, updatedEventSubscription)
-	} else if problemDetails != nil {
+	case problemDetails != nil:
 		c.JSON(int(problemDetails.Status), problemDetails)
-	} else {
+	default:
 		problemDetails = &models.ProblemDetails{
 			Status: http.StatusInternalServerError,
 			Cause:  "UNSPECIFIED_NF_FAILURE",
@@ -387,13 +391,14 @@ func (p *Processor) newAmfEventReport(ue *context.AmfUe, amfEventType models.Amf
 	report.TimeStamp = &ueSubscription.Timestamp
 	report.State = new(models.AmfEventState)
 	mode := ueSubscription.EventSubscription.Options
-	if mode == nil {
+	switch {
+	case mode == nil:
 		report.State.Active = true
-	} else if mode.Trigger == models.AmfEventTrigger_ONE_TIME {
+	case mode.Trigger == models.AmfEventTrigger_ONE_TIME:
 		report.State.Active = false
-	} else if *ueSubscription.RemainReports <= 0 {
+	case *ueSubscription.RemainReports <= 0:
 		report.State.Active = false
-	} else {
+	default:
 		report.State.Active = p.getDuration(mode.Expiry, &report.State.RemainDuration)
 		if report.State.Active {
 			report.State.RemainReports = *ueSubscription.RemainReports

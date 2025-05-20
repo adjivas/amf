@@ -29,13 +29,14 @@ func (p *Processor) HandleN1N2MessageTransferRequest(c *gin.Context,
 	n1n2MessageTransferRspData, locationHeader, problemDetails, transferErr := p.N1N2MessageTransferProcedure(
 		ueContextID, reqUri, n1n2MessageTransferRequest)
 
-	if problemDetails != nil {
+	switch {
+	case problemDetails != nil:
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
-	} else if transferErr != nil {
+	case transferErr != nil:
 		c.JSON(int(transferErr.Error.Status), transferErr)
 		return
-	} else if n1n2MessageTransferRspData != nil {
+	case n1n2MessageTransferRspData != nil:
 		switch n1n2MessageTransferRspData.Cause {
 		case models.N1N2MessageTransferCause_N1_MSG_NOT_TRANSFERRED:
 			fallthrough

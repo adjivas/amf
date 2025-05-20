@@ -918,7 +918,7 @@ func BuildConfigurationUpdateCommand(ue *context.AmfUe, anType models.AccessType
 			configurationUpdateCommand.UniversalTimeAndLocalTimeZone == nil &&
 			configurationUpdateCommand.LocalTimeZone == nil &&
 			configurationUpdateCommand.NetworkDaylightSavingTime == nil) {
-		return nil, fmt.Errorf("Configuration Update Command is invaild"), false
+		return nil, fmt.Errorf("configuration Update Command is invaild"), false
 	}
 
 	m.ConfigurationUpdateCommand = configurationUpdateCommand

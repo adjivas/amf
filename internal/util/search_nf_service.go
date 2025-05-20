@@ -12,13 +12,14 @@ func SearchNFServiceUri(nfProfile *models.NrfNfDiscoveryNfProfile, serviceName m
 	if nfProfile.NfServices != nil {
 		for _, service := range nfProfile.NfServices {
 			if service.ServiceName == serviceName && service.NfServiceStatus == nfServiceStatus {
-				if nfProfile.Fqdn != "" {
+				switch {
+				case nfProfile.Fqdn != "":
 					nfUri = nfProfile.Fqdn
-				} else if service.Fqdn != "" {
+				case service.Fqdn != "":
 					nfUri = service.Fqdn
-				} else if service.ApiPrefix != "" {
+				case service.ApiPrefix != "":
 					nfUri = service.ApiPrefix
-				} else if service.IpEndPoints != nil {
+				case service.IpEndPoints != nil:
 					point := (service.IpEndPoints)[0]
 					if point.Ipv4Address != "" {
 						nfUri = getSbiUri(service.Scheme, point.Ipv4Address, point.Port)

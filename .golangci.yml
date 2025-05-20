@@ -282,7 +282,7 @@ linters:
     - errcheck
     - goconst
     - gocritic
-    - godox
+    # - godox
     - govet
     - lll
     - nakedret

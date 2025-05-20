@@ -505,11 +505,12 @@ func (p *Processor) HandleAssignEbiDataRequest(c *gin.Context, assignEbiData mod
 	ueContextID := c.Param("ueContextId")
 
 	assignedEbiData, assignEbiError, problemDetails := p.AssignEbiDataProcedure(ueContextID, assignEbiData)
-	if problemDetails != nil {
+	switch {
+	case problemDetails != nil:
 		c.JSON(int(problemDetails.Status), problemDetails)
-	} else if assignEbiError != nil {
+	case assignEbiError != nil:
 		c.JSON(int(assignEbiError.Error.Status), assignEbiError)
-	} else {
+	default:
 		c.JSON(http.StatusOK, assignedEbiData)
 	}
 }

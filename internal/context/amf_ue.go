@@ -446,6 +446,7 @@ func (ue *AmfUe) SecurityContextIsValid() bool {
 
 // Kamf Derivation function defined in TS 33.501 Annex A.7
 func (ue *AmfUe) DerivateKamf() {
+	//nolint:gocritic // we want to handle regexp compile errors gracefully
 	supiRegexp, err := regexp.Compile("(?:imsi|supi)-([0-9]{5,15})")
 	if err != nil {
 		logger.CtxLog.Error(err)
