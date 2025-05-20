@@ -60,10 +60,10 @@ func HandleULNASTransport(ue *context.AmfUe, anType models.AccessType,
 	case nasMessage.PayloadContainerTypeUEPolicy:
 		ue.GmmLog.Infoln("AMF Transfer UEPolicy To PCF")
 		callback.SendN1MessageNotify(ue, models.N1MessageClass_UPDP,
-			ulNasTransport.PayloadContainer.GetPayloadContainerContents(), nil)
+			ulNasTransport.GetPayloadContainerContents(), nil)
 	case nasMessage.PayloadContainerTypeUEParameterUpdate:
 		ue.GmmLog.Infoln("AMF Transfer UEParameterUpdate To UDM")
-		upuMac, err := nasConvert.UpuAckToModels(ulNasTransport.PayloadContainer.GetPayloadContainerContents())
+		upuMac, err := nasConvert.UpuAckToModels(ulNasTransport.GetPayloadContainerContents())
 		if err != nil {
 			return err
 		}
@@ -85,7 +85,7 @@ func transport5GSMMessage(ue *context.AmfUe, anType models.AccessType,
 
 	ue.GmmLog.Info("Transport 5GSM Message to SMF")
 
-	smMessage := ulNasTransport.PayloadContainer.GetPayloadContainerContents()
+	smMessage := ulNasTransport.GetPayloadContainerContents()
 
 	if id := ulNasTransport.PduSessionID2Value; id != nil {
 		pduSessionID = int32(id.GetPduSessionID2Value())
@@ -239,7 +239,7 @@ func CreatePDUSession(ulNasTransport *nasMessage.ULNASTransport,
 	}
 
 	if ulNasTransport.DNN != nil {
-		dnn = ulNasTransport.DNN.GetDNN()
+		dnn = ulNasTransport.GetDNN()
 	} else {
 		// if user's subscription context obtained from UDM does not contain the default DNN for the,
 		// S-NSSAI, the AMF shall use a locally configured DNN as the DNN
@@ -400,7 +400,7 @@ func HandleRegistrationRequest(ue *context.AmfUe, anType models.AccessType, proc
 	// TS 24.501 4.4.6: When the UE sends a REGISTRATION REQUEST or SERVICE REQUEST message that includes a NAS message
 	// container IE, the UE shall set the security header type of the initial NAS message to "integrity protected"
 	if registrationRequest.NASMessageContainer != nil && !ue.MacFailed {
-		contents := registrationRequest.NASMessageContainer.GetNASMessageContainerContents()
+		contents := registrationRequest.GetNASMessageContainerContents()
 
 		// TS 24.501 4.4.6: When the UE sends a REGISTRATION REQUEST or SERVICE REQUEST message that includes a NAS
 		// message container IE, the UE shall set the security header type of the initial NAS message to
@@ -428,7 +428,7 @@ func HandleRegistrationRequest(ue *context.AmfUe, anType models.AccessType, proc
 	ue.RetransmissionOfInitialNASMsg = ue.MacFailed
 
 	ue.RegistrationRequest = registrationRequest
-	ue.RegistrationType5GS = registrationRequest.NgksiAndRegistrationType5GS.GetRegistrationType5GS()
+	ue.RegistrationType5GS = registrationRequest.GetRegistrationType5GS()
 	switch ue.RegistrationType5GS {
 	case nasMessage.RegistrationType5GSInitialRegistration:
 		ue.GmmLog.Infof("RegistrationType: Initial Registration")
@@ -455,7 +455,7 @@ func HandleRegistrationRequest(ue *context.AmfUe, anType models.AccessType, proc
 		ue.RegistrationType5GS = nasMessage.RegistrationType5GSInitialRegistration
 	}
 
-	mobileIdentity5GSContents := registrationRequest.MobileIdentity5GS.GetMobileIdentity5GSContents()
+	mobileIdentity5GSContents := registrationRequest.GetMobileIdentity5GSContents()
 	if len(mobileIdentity5GSContents) < 1 {
 		return errors.New("broken MobileIdentity5GS")
 	}
@@ -515,7 +515,7 @@ func HandleRegistrationRequest(ue *context.AmfUe, anType models.AccessType, proc
 	}
 
 	// NgKsi: TS 24.501 9.11.3.32
-	switch registrationRequest.NgksiAndRegistrationType5GS.GetTSC() {
+	switch registrationRequest.GetTSC() {
 	case nasMessage.TypeOfSecurityContextFlagNative:
 		ue.NgKsi.Tsc = models.ScType_NATIVE
 	case nasMessage.TypeOfSecurityContextFlagMapped:
@@ -648,7 +648,7 @@ func HandleInitialRegistration(ue *context.AmfUe, anType models.AccessType) erro
 
 	if ue.RegistrationRequest.MICOIndication != nil {
 		ue.GmmLog.Warnf("Receive MICO Indication[RAAI: %d], Not Supported",
-			ue.RegistrationRequest.MICOIndication.GetRAAI())
+			ue.RegistrationRequest.GetRAAI())
 	}
 
 	// TODO: Negotiate DRX value if need (TS 23.501 5.4.5)
@@ -779,7 +779,7 @@ func HandleMobilityAndPeriodicRegistrationUpdating(ue *context.AmfUe, anType mod
 	amfSelf := context.GetSelf()
 
 	if ue.RegistrationRequest.UpdateType5GS != nil {
-		if ue.RegistrationRequest.UpdateType5GS.GetNGRanRcu() == nasMessage.NGRanRadioCapabilityUpdateNeeded {
+		if ue.RegistrationRequest.GetNGRanRcu() == nasMessage.NGRanRadioCapabilityUpdateNeeded {
 			ue.UeRadioCapability = ""
 			ue.UeRadioCapabilityForPaging = nil
 		}
@@ -805,7 +805,7 @@ func HandleMobilityAndPeriodicRegistrationUpdating(ue *context.AmfUe, anType mod
 
 	if ue.RegistrationRequest.MICOIndication != nil {
 		ue.GmmLog.Warnf("Receive MICO Indication[RAAI: %d], Not Supported",
-			ue.RegistrationRequest.MICOIndication.GetRAAI())
+			ue.RegistrationRequest.GetRAAI())
 	}
 
 	// TODO: Negotiate DRX value if need (TS 23.501 5.4.5)
@@ -1298,7 +1298,7 @@ func assignLadnInfo(ue *context.AmfUe, accessType models.AccessType) {
 				}
 			}
 		} else {
-			requestedLadnList := nasConvert.LadnToModels(ue.RegistrationRequest.LADNIndication.GetLADNDNNValue())
+			requestedLadnList := nasConvert.LadnToModels(ue.RegistrationRequest.GetLADNDNNValue())
 			for _, requestedLadn := range requestedLadnList {
 				if ladn, ok := amfSelf.LadnPool[requestedLadn]; ok {
 					if ue.TaiListInRegistrationArea(ladn.TaiList, accessType) {
@@ -1509,7 +1509,7 @@ func HandleIdentityResponse(ue *context.AmfUe, identityResponse *nasMessage.Iden
 
 	ue.GmmLog.Info("Handle Identity Response")
 
-	mobileIdentityContents := identityResponse.MobileIdentity.GetMobileIdentityContents()
+	mobileIdentityContents := identityResponse.GetMobileIdentityContents()
 	if len(mobileIdentityContents) < 1 {
 		return errors.New("empty Mobile Identity")
 	}
@@ -1589,7 +1589,7 @@ func HandleNotificationResponse(ue *context.AmfUe, notificationResponse *nasMess
 	ue.StopT3565()
 
 	if notificationResponse != nil && notificationResponse.PDUSessionStatus != nil {
-		psiArray := nasConvert.PSIToBooleanArray(notificationResponse.PDUSessionStatus.Buffer)
+		psiArray := nasConvert.PSIToBooleanArray(notificationResponse.Buffer)
 		for psi := 1; psi <= 15; psi++ {
 			pduSessionId := int32(psi)
 			if smContext, ok := ue.SmContextFindByPDUSessionID(pduSessionId); ok {
@@ -1745,7 +1745,7 @@ func HandleServiceRequest(ue *context.AmfUe, anType models.AccessType,
 	// TS 24.501 4.4.6: When the UE sends a REGISTRATION REQUEST or SERVICE REQUEST message that includes a NAS message
 	// container IE, the UE shall set the security header type of the initial NAS message to "integrity protected"
 	if serviceRequest.NASMessageContainer != nil {
-		contents := serviceRequest.NASMessageContainer.GetNASMessageContainerContents()
+		contents := serviceRequest.GetNASMessageContainerContents()
 
 		// TS 24.501 4.4.6: When the UE sends a REGISTRATION REQUEST or SERVICE REQUEST message that includes a NAS
 		// message container IE, the UE shall set the security header type of the initial NAS message to
@@ -1959,7 +1959,7 @@ func HandleAuthenticationResponse(ue *context.AmfUe, accessType models.AccessTyp
 		if authenticationResponse.AuthenticationResponseParameter == nil {
 			return fmt.Errorf("AuthenticationResponseParamete is nil")
 		}
-		resStar := authenticationResponse.AuthenticationResponseParameter.GetRES()
+		resStar := authenticationResponse.GetRES()
 
 		// Calculate HRES* (TS 33.501 Annex A.5)
 		p0, err := hex.DecodeString(av5gAka.Rand)
@@ -2087,9 +2087,10 @@ func HandleAuthenticationFailure(ue *context.AmfUe, anType models.AccessType,
 
 	ue.StopT3560()
 
-	cause5GMM := authenticationFailure.Cause5GMM.GetCauseValue()
+	cause5GMM := authenticationFailure.GetCauseValue()
 
-	if ue.AuthenticationCtx.AuthType == models.AusfUeAuthenticationAuthType__5_G_AKA {
+	switch ue.AuthenticationCtx.AuthType {
+	case models.AusfUeAuthenticationAuthType__5_G_AKA:
 		switch cause5GMM {
 		case nasMessage.Cause5GMMMACFailure:
 			ue.GmmLog.Warnln("Authentication Failure Cause: Mac Failure")
@@ -2153,7 +2154,7 @@ func HandleAuthenticationFailure(ue *context.AmfUe, anType models.AccessType,
 			if authenticationFailure.AuthenticationFailureParameter == nil {
 				return errors.New("AuthenticationFailureParameter is nil")
 			}
-			auts := authenticationFailure.AuthenticationFailureParameter.GetAuthenticationFailureParameter()
+			auts := authenticationFailure.GetAuthenticationFailureParameter()
 			resynchronizationInfo := &models.ResynchronizationInfo{
 				Auts: hex.EncodeToString(auts[:]),
 				Rand: av5gAka.Rand,
@@ -2171,7 +2172,7 @@ func HandleAuthenticationFailure(ue *context.AmfUe, anType models.AccessType,
 
 			gmm_message.SendAuthenticationRequest(ue.RanUe[anType])
 		}
-	} else if ue.AuthenticationCtx.AuthType == models.AusfUeAuthenticationAuthType_EAP_AKA_PRIME {
+	case models.AusfUeAuthenticationAuthType_EAP_AKA_PRIME:
 		switch cause5GMM {
 		case nasMessage.Cause5GMMngKSIAlreadyInUse:
 			ue.GmmLog.Warn("Authentication Failure 5GMM Cause: NgKSI Already In Use")
@@ -2268,7 +2269,7 @@ func HandleSecurityModeComplete(ue *context.AmfUe, anType models.AccessType, pro
 
 	// TODO: AMF shall set the NAS COUNTs to zero if horizontal derivation of KAMF is performed
 	if securityModeComplete.NASMessageContainer != nil {
-		contents := securityModeComplete.NASMessageContainer.GetNASMessageContainerContents()
+		contents := securityModeComplete.GetNASMessageContainerContents()
 		m := nas.NewMessage()
 		if err := m.GmmMessageDecode(&contents); err != nil {
 			return err
@@ -2278,9 +2279,9 @@ func HandleSecurityModeComplete(ue *context.AmfUe, anType models.AccessType, pro
 		event := SecurityModeSuccessEvent
 		switch m.GmmMessage.GmmHeader.GetMessageType() {
 		case nas.MsgTypeRegistrationRequest:
-			argsType[ArgNASMessage] = m.GmmMessage.RegistrationRequest
+			argsType[ArgNASMessage] = m.RegistrationRequest
 		case nas.MsgTypeServiceRequest:
-			argsType[ArgNASMessage] = m.GmmMessage.ServiceRequest
+			argsType[ArgNASMessage] = m.ServiceRequest
 			if !ue.State[anType].Is(context.Registered) {
 				gmm_message.SendServiceReject(ue.RanUe[anType], nil, nasMessage.Cause5GMMUEIdentityCannotBeDerivedByTheNetwork)
 				ue.GmmLog.Warnf("Service Request was sent when UE state was not Registered")
@@ -2309,7 +2310,7 @@ func HandleSecurityModeReject(ue *context.AmfUe, anType models.AccessType,
 
 	ue.StopT3560()
 
-	cause := securityModeReject.Cause5GMM.GetCauseValue()
+	cause := securityModeReject.GetCauseValue()
 	ue.GmmLog.Warnf("Reject Cause: %s", nasMessage.Cause5GMMToString(cause))
 	ue.GmmLog.Error("UE reject the security mode command, abort the ongoing procedure")
 	return nil
@@ -2449,7 +2450,7 @@ func HandleStatus5GMM(ue *context.AmfUe, anType models.AccessType, status5GMM *n
 		return fmt.Errorf("NAS message integrity check failed")
 	}
 
-	cause := status5GMM.Cause5GMM.GetCauseValue()
+	cause := status5GMM.GetCauseValue()
 	ue.GmmLog.Errorf("Error condition [Cause Value: %s]", nasMessage.Cause5GMMToString(cause))
 	return nil
 }

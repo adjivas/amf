@@ -449,9 +449,9 @@ func handleInitialUEMessageMain(ran *context.AmfRan,
 	nasMsg, err := nas_security.DecodePlainNasNoIntegrityCheck(nASPDU.Value)
 	if err == nil && nasMsg.GmmMessage != nil {
 		gmmMessage = nasMsg.GmmMessage
-		nasMsgType = gmmMessage.GmmHeader.GetMessageType()
+		nasMsgType = gmmMessage.GetMessageType()
 		if gmmMessage.RegistrationRequest != nil {
-			regReqType = gmmMessage.RegistrationRequest.NgksiAndRegistrationType5GS.GetRegistrationType5GS()
+			regReqType = gmmMessage.GetRegistrationType5GS()
 		}
 	}
 
@@ -490,7 +490,7 @@ func handleInitialUEMessageMain(ran *context.AmfRan,
 
 	// If id type is GUTI, since MAC can't be checked here (no amfUe context), the GUTI may not direct to the right amfUe.
 	// In this case, create a new amfUe to handle the following registration procedure.
-	var isInvalidGUTI bool = (idType == "5G-GUTI")
+	var isInvalidGUTI = (idType == "5G-GUTI")
 	amfUe, ok := findAmfUe(ran, id, idType)
 	if ok && !isInvalidGUTI {
 		// TODO: invoke Namf_Communication_UEContextTransfer if serving AMF has changed since

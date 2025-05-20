@@ -171,7 +171,7 @@ func Authentication(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
 				logger.GmmLog.Errorln(err)
 			} else {
 				// update identity type used for reauthentication
-				mobileIdentityContents := gmmMessage.IdentityResponse.MobileIdentity.GetMobileIdentityContents()
+				mobileIdentityContents := gmmMessage.GetMobileIdentityContents()
 				amfUe.IdentityTypeUsedForRegistration = nasConvert.GetTypeOfIdentity(mobileIdentityContents[0])
 
 				errSendEvent := GmmFSM.SendEvent(

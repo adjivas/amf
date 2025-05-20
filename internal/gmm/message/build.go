@@ -32,32 +32,32 @@ func BuildDLNASTransport(ue *context.AmfUe, accessType models.AccessType, payloa
 	}
 
 	dLNASTransport := nasMessage.NewDLNASTransport(0)
-	dLNASTransport.SpareHalfOctetAndSecurityHeaderType.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
+	dLNASTransport.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
 	dLNASTransport.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
 	dLNASTransport.SetMessageType(nas.MsgTypeDLNASTransport)
-	dLNASTransport.SpareHalfOctetAndPayloadContainerType.SetPayloadContainerType(payloadContainerType)
+	dLNASTransport.SetPayloadContainerType(payloadContainerType)
 	dLNASTransport.PayloadContainer.SetLen(uint16(len(nasPdu)))
-	dLNASTransport.PayloadContainer.SetPayloadContainerContents(nasPdu)
+	dLNASTransport.SetPayloadContainerContents(nasPdu)
 
 	if pduSessionId != 0 {
 		dLNASTransport.PduSessionID2Value = new(nasType.PduSessionID2Value)
 		dLNASTransport.PduSessionID2Value.SetIei(nasMessage.DLNASTransportPduSessionID2ValueType)
-		dLNASTransport.PduSessionID2Value.SetPduSessionID2Value(pduSessionId)
+		dLNASTransport.SetPduSessionID2Value(pduSessionId)
 	}
 	if cause != nil {
 		dLNASTransport.Cause5GMM = new(nasType.Cause5GMM)
 		dLNASTransport.Cause5GMM.SetIei(nasMessage.DLNASTransportCause5GMMType)
-		dLNASTransport.Cause5GMM.SetCauseValue(*cause)
+		dLNASTransport.SetCauseValue(*cause)
 	}
 	if backoffTimerUint != nil {
 		dLNASTransport.BackoffTimerValue = new(nasType.BackoffTimerValue)
 		dLNASTransport.BackoffTimerValue.SetIei(nasMessage.DLNASTransportBackoffTimerValueType)
 		dLNASTransport.BackoffTimerValue.SetLen(1)
-		dLNASTransport.BackoffTimerValue.SetUnitTimerValue(*backoffTimerUint)
-		dLNASTransport.BackoffTimerValue.SetTimerValue(backoffTimer)
+		dLNASTransport.SetUnitTimerValue(*backoffTimerUint)
+		dLNASTransport.SetTimerValue(backoffTimer)
 	}
 
-	m.GmmMessage.DLNASTransport = dLNASTransport
+	m.DLNASTransport = dLNASTransport
 
 	return nas_security.Encode(ue, m, accessType)
 }
@@ -74,7 +74,7 @@ func BuildNotification(ue *context.AmfUe, accessType models.AccessType) ([]byte,
 
 	notification := nasMessage.NewNotification(0)
 	notification.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
-	notification.ExtendedProtocolDiscriminator.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
+	notification.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
 	notification.SetMessageType(nas.MsgTypeNotification)
 	if accessType == models.AccessType__3_GPP_ACCESS {
 		notification.SetAccessType(nasMessage.AccessType3GPP)
@@ -82,7 +82,7 @@ func BuildNotification(ue *context.AmfUe, accessType models.AccessType) ([]byte,
 		notification.SetAccessType(nasMessage.AccessTypeNon3GPP)
 	}
 
-	m.GmmMessage.Notification = notification
+	m.Notification = notification
 
 	return nas_security.Encode(ue, m, accessType)
 }
@@ -101,12 +101,12 @@ func BuildIdentityRequest(ue *context.AmfUe, accessType models.AccessType, typeO
 
 	identityRequest := nasMessage.NewIdentityRequest(0)
 	identityRequest.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
-	identityRequest.SpareHalfOctetAndSecurityHeaderType.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
-	identityRequest.SpareHalfOctetAndSecurityHeaderType.SetSpareHalfOctet(0)
-	identityRequest.IdentityRequestMessageIdentity.SetMessageType(nas.MsgTypeIdentityRequest)
-	identityRequest.SpareHalfOctetAndIdentityType.SetTypeOfIdentity(typeOfIdentity)
+	identityRequest.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
+	identityRequest.SetSpareHalfOctet(0)
+	identityRequest.SetMessageType(nas.MsgTypeIdentityRequest)
+	identityRequest.SetTypeOfIdentity(typeOfIdentity)
 
-	m.GmmMessage.IdentityRequest = identityRequest
+	m.IdentityRequest = identityRequest
 
 	return nas_security.Encode(ue, m, accessType)
 }
@@ -118,12 +118,12 @@ func BuildAuthenticationRequest(ue *context.AmfUe, accessType models.AccessType)
 
 	authenticationRequest := nasMessage.NewAuthenticationRequest(0)
 	authenticationRequest.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
-	authenticationRequest.SpareHalfOctetAndSecurityHeaderType.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
+	authenticationRequest.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
 	authenticationRequest.SpareHalfOctetAndSecurityHeaderType.SetSpareHalfOctet(0)
-	authenticationRequest.AuthenticationRequestMessageIdentity.SetMessageType(nas.MsgTypeAuthenticationRequest)
+	authenticationRequest.SetMessageType(nas.MsgTypeAuthenticationRequest)
 	authenticationRequest.SpareHalfOctetAndNgksi = nasConvert.SpareHalfOctetAndNgksiToNas(ue.NgKsi)
 	authenticationRequest.ABBA.SetLen(uint8(len(ue.ABBA)))
-	authenticationRequest.ABBA.SetABBAContents(ue.ABBA)
+	authenticationRequest.SetABBAContents(ue.ABBA)
 
 	switch ue.AuthenticationCtx.AuthType {
 	case models.AusfUeAuthenticationAuthType__5_G_AKA:
@@ -142,7 +142,7 @@ func BuildAuthenticationRequest(ue *context.AmfUe, accessType models.AccessType)
 		authenticationRequest.AuthenticationParameterRAND = nasType.
 			NewAuthenticationParameterRAND(nasMessage.AuthenticationRequestAuthenticationParameterRANDType)
 		copy(tmpArray[:], rand[0:16])
-		authenticationRequest.AuthenticationParameterRAND.SetRANDValue(tmpArray)
+		authenticationRequest.SetRANDValue(tmpArray)
 
 		autn, err := hex.DecodeString(av5gAka.Autn)
 		if err != nil {
@@ -152,7 +152,7 @@ func BuildAuthenticationRequest(ue *context.AmfUe, accessType models.AccessType)
 			NewAuthenticationParameterAUTN(nasMessage.AuthenticationRequestAuthenticationParameterAUTNType)
 		authenticationRequest.AuthenticationParameterAUTN.SetLen(uint8(len(autn)))
 		copy(tmpArray[:], autn[0:16])
-		authenticationRequest.AuthenticationParameterAUTN.SetAUTN(tmpArray)
+		authenticationRequest.SetAUTN(tmpArray)
 	case models.AusfUeAuthenticationAuthType_EAP_AKA_PRIME:
 		eapMsg := ue.AuthenticationCtx.Var5gAuthData.(string)
 		rawEapMsg, err := base64.StdEncoding.DecodeString(eapMsg)
@@ -161,10 +161,10 @@ func BuildAuthenticationRequest(ue *context.AmfUe, accessType models.AccessType)
 		}
 		authenticationRequest.EAPMessage = nasType.NewEAPMessage(nasMessage.AuthenticationRequestEAPMessageType)
 		authenticationRequest.EAPMessage.SetLen(uint16(len(rawEapMsg)))
-		authenticationRequest.EAPMessage.SetEAPMessage(rawEapMsg)
+		authenticationRequest.SetEAPMessage(rawEapMsg)
 	}
 
-	m.GmmMessage.AuthenticationRequest = authenticationRequest
+	m.AuthenticationRequest = authenticationRequest
 
 	m.SecurityHeader = nas.SecurityHeader{
 		ProtocolDiscriminator: nasMessage.Epd5GSMobilityManagementMessage,
@@ -209,7 +209,7 @@ func BuildServiceAccept(ue *context.AmfUe, accessType models.AccessType, pDUSess
 		serviceAccept.PDUSessionReactivationResultErrorCause.SetLen(uint16(len(buf)))
 		serviceAccept.PDUSessionReactivationResultErrorCause.Buffer = buf
 	}
-	m.GmmMessage.ServiceAccept = serviceAccept
+	m.ServiceAccept = serviceAccept
 
 	return nas_security.Encode(ue, m, accessType)
 }
@@ -221,9 +221,9 @@ func BuildAuthenticationReject(ue *context.AmfUe, accessType models.AccessType, 
 
 	authenticationReject := nasMessage.NewAuthenticationReject(0)
 	authenticationReject.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
-	authenticationReject.SpareHalfOctetAndSecurityHeaderType.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
-	authenticationReject.SpareHalfOctetAndSecurityHeaderType.SetSpareHalfOctet(0)
-	authenticationReject.AuthenticationRejectMessageIdentity.SetMessageType(nas.MsgTypeAuthenticationReject)
+	authenticationReject.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
+	authenticationReject.SetSpareHalfOctet(0)
+	authenticationReject.SetMessageType(nas.MsgTypeAuthenticationReject)
 
 	if eapMsg != "" {
 		rawEapMsg, err := base64.StdEncoding.DecodeString(eapMsg)
@@ -231,11 +231,11 @@ func BuildAuthenticationReject(ue *context.AmfUe, accessType models.AccessType, 
 			return nil, err
 		}
 		authenticationReject.EAPMessage = nasType.NewEAPMessage(nasMessage.AuthenticationRejectEAPMessageType)
-		authenticationReject.EAPMessage.SetLen(uint16(len(rawEapMsg)))
-		authenticationReject.EAPMessage.SetEAPMessage(rawEapMsg)
+		authenticationReject.SetLen(uint16(len(rawEapMsg)))
+		authenticationReject.SetEAPMessage(rawEapMsg)
 	}
 
-	m.GmmMessage.AuthenticationReject = authenticationReject
+	m.AuthenticationReject = authenticationReject
 
 	m.SecurityHeader = nas.SecurityHeader{
 		ProtocolDiscriminator: nasMessage.Epd5GSMobilityManagementMessage,
@@ -252,24 +252,24 @@ func BuildAuthenticationResult(ue *context.AmfUe, accessType models.AccessType, 
 
 	authenticationResult := nasMessage.NewAuthenticationResult(0)
 	authenticationResult.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
-	authenticationResult.SpareHalfOctetAndSecurityHeaderType.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
+	authenticationResult.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
 	authenticationResult.SpareHalfOctetAndSecurityHeaderType.SetSpareHalfOctet(0)
-	authenticationResult.AuthenticationResultMessageIdentity.SetMessageType(nas.MsgTypeAuthenticationResult)
+	authenticationResult.SetMessageType(nas.MsgTypeAuthenticationResult)
 	authenticationResult.SpareHalfOctetAndNgksi = nasConvert.SpareHalfOctetAndNgksiToNas(ue.NgKsi)
 	rawEapMsg, err := base64.StdEncoding.DecodeString(eapMsg)
 	if err != nil {
 		return nil, err
 	}
 	authenticationResult.EAPMessage.SetLen(uint16(len(rawEapMsg)))
-	authenticationResult.EAPMessage.SetEAPMessage(rawEapMsg)
+	authenticationResult.SetEAPMessage(rawEapMsg)
 
 	if eapSuccess {
 		authenticationResult.ABBA = nasType.NewABBA(nasMessage.AuthenticationResultABBAType)
 		authenticationResult.ABBA.SetLen(uint8(len(ue.ABBA)))
-		authenticationResult.ABBA.SetABBAContents(ue.ABBA)
+		authenticationResult.SetABBAContents(ue.ABBA)
 	}
 
-	m.GmmMessage.AuthenticationResult = authenticationResult
+	m.AuthenticationResult = authenticationResult
 
 	m.SecurityHeader = nas.SecurityHeader{
 		ProtocolDiscriminator: nasMessage.Epd5GSMobilityManagementMessage,
@@ -297,7 +297,7 @@ func BuildServiceReject(ue *context.AmfUe, accessType models.AccessType, pDUSess
 		serviceReject.PDUSessionStatus.Buffer = nasConvert.PSIToBuf(*pDUSessionStatus)
 	}
 
-	m.GmmMessage.ServiceReject = serviceReject
+	m.ServiceReject = serviceReject
 
 	m.SecurityHeader = nas.SecurityHeader{
 		ProtocolDiscriminator: nasMessage.Epd5GSMobilityManagementMessage,
@@ -315,10 +315,10 @@ func BuildRegistrationReject(ue *context.AmfUe, accessType models.AccessType, ca
 
 	registrationReject := nasMessage.NewRegistrationReject(0)
 	registrationReject.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
-	registrationReject.SpareHalfOctetAndSecurityHeaderType.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
-	registrationReject.SpareHalfOctetAndSecurityHeaderType.SetSpareHalfOctet(0)
-	registrationReject.RegistrationRejectMessageIdentity.SetMessageType(nas.MsgTypeRegistrationReject)
-	registrationReject.Cause5GMM.SetCauseValue(cause5GMM)
+	registrationReject.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
+	registrationReject.SetSpareHalfOctet(0)
+	registrationReject.SetMessageType(nas.MsgTypeRegistrationReject)
+	registrationReject.SetCauseValue(cause5GMM)
 
 	t3502Val := context.GetSelf().T3502Value
 	if ue != nil {
@@ -338,10 +338,10 @@ func BuildRegistrationReject(ue *context.AmfUe, accessType models.AccessType, ca
 			return nil, err
 		}
 		registrationReject.EAPMessage.SetLen(uint16(len(rawEapMsg)))
-		registrationReject.EAPMessage.SetEAPMessage(rawEapMsg)
+		registrationReject.SetEAPMessage(rawEapMsg)
 	}
 
-	m.GmmMessage.RegistrationReject = registrationReject
+	m.RegistrationReject = registrationReject
 
 	m.SecurityHeader = nas.SecurityHeader{
 		ProtocolDiscriminator: nasMessage.Epd5GSMobilityManagementMessage,
@@ -365,9 +365,9 @@ func BuildSecurityModeCommand(ue *context.AmfUe, accessType models.AccessType, e
 
 	securityModeCommand := nasMessage.NewSecurityModeCommand(0)
 	securityModeCommand.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
-	securityModeCommand.SpareHalfOctetAndSecurityHeaderType.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
+	securityModeCommand.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
 	securityModeCommand.SpareHalfOctetAndSecurityHeaderType.SetSpareHalfOctet(0)
-	securityModeCommand.SecurityModeCommandMessageIdentity.SetMessageType(nas.MsgTypeSecurityModeCommand)
+	securityModeCommand.SetMessageType(nas.MsgTypeSecurityModeCommand)
 
 	securityModeCommand.SelectedNASSecurityAlgorithms.SetTypeOfCipheringAlgorithm(ue.CipheringAlg)
 	securityModeCommand.SelectedNASSecurityAlgorithms.SetTypeOfIntegrityProtectionAlgorithm(ue.IntegrityAlg)
@@ -379,26 +379,26 @@ func BuildSecurityModeCommand(ue *context.AmfUe, accessType models.AccessType, e
 
 	if ue.Pei != "" {
 		securityModeCommand.IMEISVRequest = nasType.NewIMEISVRequest(nasMessage.SecurityModeCommandIMEISVRequestType)
-		securityModeCommand.IMEISVRequest.SetIMEISVRequestValue(nasMessage.IMEISVNotRequested)
+		securityModeCommand.SetIMEISVRequestValue(nasMessage.IMEISVNotRequested)
 	} else {
 		securityModeCommand.IMEISVRequest = nasType.NewIMEISVRequest(nasMessage.SecurityModeCommandIMEISVRequestType)
-		securityModeCommand.IMEISVRequest.SetIMEISVRequestValue(nasMessage.IMEISVRequested)
+		securityModeCommand.SetIMEISVRequestValue(nasMessage.IMEISVRequested)
 	}
 
 	securityModeCommand.Additional5GSecurityInformation = nasType.
 		NewAdditional5GSecurityInformation(nasMessage.SecurityModeCommandAdditional5GSecurityInformationType)
 	securityModeCommand.Additional5GSecurityInformation.SetLen(1)
 	if ue.RetransmissionOfInitialNASMsg {
-		securityModeCommand.Additional5GSecurityInformation.SetRINMR(1)
+		securityModeCommand.SetRINMR(1)
 	} else {
-		securityModeCommand.Additional5GSecurityInformation.SetRINMR(0)
+		securityModeCommand.SetRINMR(0)
 	}
 
 	if ue.RegistrationType5GS == nasMessage.RegistrationType5GSPeriodicRegistrationUpdating ||
 		ue.RegistrationType5GS == nasMessage.RegistrationType5GSMobilityRegistrationUpdating {
-		securityModeCommand.Additional5GSecurityInformation.SetHDP(1)
+		securityModeCommand.SetHDP(1)
 	} else {
-		securityModeCommand.Additional5GSecurityInformation.SetHDP(0)
+		securityModeCommand.SetHDP(0)
 	}
 
 	if eapMessage != "" {
@@ -408,17 +408,17 @@ func BuildSecurityModeCommand(ue *context.AmfUe, accessType models.AccessType, e
 			return nil, err
 		}
 		securityModeCommand.EAPMessage.SetLen(uint16(len(rawEapMsg)))
-		securityModeCommand.EAPMessage.SetEAPMessage(rawEapMsg)
+		securityModeCommand.SetEAPMessage(rawEapMsg)
 
 		if eapSuccess {
 			securityModeCommand.ABBA = nasType.NewABBA(nasMessage.SecurityModeCommandABBAType)
 			securityModeCommand.ABBA.SetLen(uint8(len(ue.ABBA)))
-			securityModeCommand.ABBA.SetABBAContents(ue.ABBA)
+			securityModeCommand.SetABBAContents(ue.ABBA)
 		}
 	}
 
 	ue.SecurityContextAvailable = true
-	m.GmmMessage.SecurityModeCommand = securityModeCommand
+	m.SecurityModeCommand = securityModeCommand
 	payload, err := nas_security.Encode(ue, m, accessType)
 	if err != nil {
 		ue.SecurityContextAvailable = false
@@ -438,8 +438,8 @@ func BuildDeregistrationRequest(ue *context.RanUe, accessType uint8, reRegistrat
 
 	deregistrationRequest := nasMessage.NewDeregistrationRequestUETerminatedDeregistration(0)
 	deregistrationRequest.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
-	deregistrationRequest.SpareHalfOctetAndSecurityHeaderType.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
-	deregistrationRequest.SpareHalfOctetAndSecurityHeaderType.SetSpareHalfOctet(0)
+	deregistrationRequest.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
+	deregistrationRequest.SetSpareHalfOctet(0)
 	deregistrationRequest.SetMessageType(nas.MsgTypeDeregistrationRequestUETerminatedDeregistration)
 
 	deregistrationRequest.SetAccessType(accessType)
@@ -453,18 +453,19 @@ func BuildDeregistrationRequest(ue *context.RanUe, accessType uint8, reRegistrat
 	if cause5GMM != 0 {
 		deregistrationRequest.Cause5GMM = nasType.NewCause5GMM(
 			nasMessage.DeregistrationRequestUETerminatedDeregistrationCause5GMMType)
-		deregistrationRequest.Cause5GMM.SetCauseValue(cause5GMM)
+		deregistrationRequest.SetCauseValue(cause5GMM)
 	}
-	m.GmmMessage.DeregistrationRequestUETerminatedDeregistration = deregistrationRequest
+	m.DeregistrationRequestUETerminatedDeregistration = deregistrationRequest
 
 	m.SecurityHeader = nas.SecurityHeader{
 		ProtocolDiscriminator: nasMessage.Epd5GSMobilityManagementMessage,
 		SecurityHeaderType:    nas.SecurityHeaderTypeIntegrityProtectedAndCiphered,
 	}
 	var anType models.AccessType
-	if accessType == 0x01 {
+	switch accessType {
+	case 0x01:
 		anType = models.AccessType__3_GPP_ACCESS
-	} else if accessType == 0x02 {
+	case 0x02:
 		anType = models.AccessType_NON_3_GPP_ACCESS
 	}
 	if ue != nil {
@@ -481,11 +482,11 @@ func BuildDeregistrationAccept(ue *context.AmfUe, accessType models.AccessType) 
 
 	deregistrationAccept := nasMessage.NewDeregistrationAcceptUEOriginatingDeregistration(0)
 	deregistrationAccept.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
-	deregistrationAccept.SpareHalfOctetAndSecurityHeaderType.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
-	deregistrationAccept.SpareHalfOctetAndSecurityHeaderType.SetSpareHalfOctet(0)
+	deregistrationAccept.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
+	deregistrationAccept.SetSpareHalfOctet(0)
 	deregistrationAccept.SetMessageType(nas.MsgTypeDeregistrationAcceptUEOriginatingDeregistration)
 
-	m.GmmMessage.DeregistrationAcceptUEOriginatingDeregistration = deregistrationAccept
+	m.DeregistrationAcceptUEOriginatingDeregistration = deregistrationAccept
 
 	m.SecurityHeader = nas.SecurityHeader{
 		ProtocolDiscriminator: nasMessage.Epd5GSMobilityManagementMessage,
@@ -512,9 +513,9 @@ func BuildRegistrationAccept(
 
 	registrationAccept := nasMessage.NewRegistrationAccept(0)
 	registrationAccept.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
-	registrationAccept.SpareHalfOctetAndSecurityHeaderType.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
-	registrationAccept.SpareHalfOctetAndSecurityHeaderType.SetSpareHalfOctet(0)
-	registrationAccept.RegistrationAcceptMessageIdentity.SetMessageType(nas.MsgTypeRegistrationAccept)
+	registrationAccept.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
+	registrationAccept.SetSpareHalfOctet(0)
+	registrationAccept.SetMessageType(nas.MsgTypeRegistrationAccept)
 
 	registrationAccept.RegistrationResult5GS.SetLen(1)
 	registrationResult := uint8(0)
@@ -529,7 +530,7 @@ func BuildRegistrationAccept(
 			registrationResult |= nasMessage.AccessType3GPP
 		}
 	}
-	registrationAccept.RegistrationResult5GS.SetRegistrationResultValue5GS(registrationResult)
+	registrationAccept.SetRegistrationResultValue5GS(registrationResult)
 	// TODO: set smsAllowed value of RegistrationResult5GS if need
 
 	if ue.Guti != "" {
@@ -556,7 +557,7 @@ func BuildRegistrationAccept(
 		registrationAccept.TAIList = nasType.NewTAIList(nasMessage.RegistrationAcceptTAIListType)
 		taiListNas := nasConvert.TaiListToNas(ue.RegistrationArea[anType])
 		registrationAccept.TAIList.SetLen(uint8(len(taiListNas)))
-		registrationAccept.TAIList.SetPartialTrackingAreaIdentityList(taiListNas)
+		registrationAccept.SetPartialTrackingAreaIdentityList(taiListNas)
 	}
 
 	if len(ue.AllowedNssai[anType]) > 0 {
@@ -635,14 +636,14 @@ func BuildRegistrationAccept(
 			buf = append(buf, ladnNas...)
 		}
 		registrationAccept.LADNInformation.SetLen(uint16(len(buf)))
-		registrationAccept.LADNInformation.SetLADND(buf)
+		registrationAccept.SetLADND(buf)
 	}
 
 	if ue.NetworkSlicingSubscriptionChanged {
 		registrationAccept.NetworkSlicingIndication = nasType.
 			NewNetworkSlicingIndication(nasMessage.RegistrationAcceptNetworkSlicingIndicationType)
-		registrationAccept.NetworkSlicingIndication.SetNSSCI(1)
-		registrationAccept.NetworkSlicingIndication.SetDCNI(0)
+		registrationAccept.SetNSSCI(1)
+		registrationAccept.SetDCNI(0)
 		ue.NetworkSlicingSubscriptionChanged = false // reset the value
 	}
 
@@ -651,7 +652,7 @@ func BuildRegistrationAccept(
 		registrationAccept.ServiceAreaList = nasType.NewServiceAreaList(nasMessage.RegistrationAcceptServiceAreaListType)
 		partialServiceAreaList := nasConvert.PartialServiceAreaListToNas(ue.PlmnId, *ue.AmPolicyAssociation.ServAreaRes)
 		registrationAccept.ServiceAreaList.SetLen(uint8(len(partialServiceAreaList)))
-		registrationAccept.ServiceAreaList.SetPartialServiceAreaList(partialServiceAreaList)
+		registrationAccept.SetPartialServiceAreaList(partialServiceAreaList)
 	}
 
 	if anType == models.AccessType__3_GPP_ACCESS && ue.T3512Value != 0 {
@@ -680,10 +681,10 @@ func BuildRegistrationAccept(
 		registrationAccept.NegotiatedDRXParameters = nasType.
 			NewNegotiatedDRXParameters(nasMessage.RegistrationAcceptNegotiatedDRXParametersType)
 		registrationAccept.NegotiatedDRXParameters.SetLen(1)
-		registrationAccept.NegotiatedDRXParameters.SetDRXValue(ue.UESpecificDRX)
+		registrationAccept.SetDRXValue(ue.UESpecificDRX)
 	}
 
-	m.GmmMessage.RegistrationAccept = registrationAccept
+	m.RegistrationAccept = registrationAccept
 
 	return nas_security.Encode(ue, m, anType)
 }
@@ -700,7 +701,7 @@ func includeConfiguredNssaiCheck(ue *context.AmfUe) bool {
 	if ue.NetworkSliceInfo != nil && len(ue.NetworkSliceInfo.RejectedNssaiInPlmn) != 0 {
 		return true
 	}
-	if registrationRequest.NetworkSlicingIndication != nil && registrationRequest.NetworkSlicingIndication.GetDCNI() == 1 {
+	if registrationRequest.NetworkSlicingIndication != nil && registrationRequest.GetDCNI() == 1 {
 		return true
 	}
 	return false
@@ -717,7 +718,7 @@ func BuildStatus5GMM(ue *context.AmfUe, accessType models.AccessType, cause uint
 	status5GMM.SetMessageType(nas.MsgTypeStatus5GMM)
 	status5GMM.SetCauseValue(cause)
 
-	m.GmmMessage.Status5GMM = status5GMM
+	m.Status5GMM = status5GMM
 
 	m.SecurityHeader = nas.SecurityHeader{
 		ProtocolDiscriminator: nasMessage.Epd5GSMobilityManagementMessage,
@@ -737,14 +738,14 @@ func BuildConfigurationUpdateCommand(ue *context.AmfUe, anType models.AccessType
 
 	configurationUpdateCommand := nasMessage.NewConfigurationUpdateCommand(0)
 	configurationUpdateCommand.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
-	configurationUpdateCommand.SpareHalfOctetAndSecurityHeaderType.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
-	configurationUpdateCommand.SpareHalfOctetAndSecurityHeaderType.SetSpareHalfOctet(0)
+	configurationUpdateCommand.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
+	configurationUpdateCommand.SetSpareHalfOctet(0)
 	configurationUpdateCommand.SetMessageType(nas.MsgTypeConfigurationUpdateCommand)
 
 	if flags.NeedNetworkSlicingIndication {
 		configurationUpdateCommand.NetworkSlicingIndication = nasType.
 			NewNetworkSlicingIndication(nasMessage.ConfigurationUpdateCommandNetworkSlicingIndicationType)
-		configurationUpdateCommand.NetworkSlicingIndication.SetNSSCI(0x01)
+		configurationUpdateCommand.SetNSSCI(0x01)
 	}
 
 	if flags.NeedGUTI {
@@ -809,7 +810,7 @@ func BuildConfigurationUpdateCommand(ue *context.AmfUe, anType models.AccessType
 			configurationUpdateCommand.TAIList = nasType.NewTAIList(nasMessage.ConfigurationUpdateCommandTAIListType)
 			taiListNas := nasConvert.TaiListToNas(ue.RegistrationArea[anType])
 			configurationUpdateCommand.TAIList.SetLen(uint8(len(taiListNas)))
-			configurationUpdateCommand.TAIList.SetPartialTrackingAreaIdentityList(taiListNas)
+			configurationUpdateCommand.SetPartialTrackingAreaIdentityList(taiListNas)
 		} else {
 			logger.GmmLog.Warnf("Require TAI List, but got nothing.")
 		}
@@ -822,7 +823,7 @@ func BuildConfigurationUpdateCommand(ue *context.AmfUe, anType models.AccessType
 			partialServiceAreaList := nasConvert.
 				PartialServiceAreaListToNas(ue.PlmnId, *ue.AmPolicyAssociation.ServAreaRes)
 			configurationUpdateCommand.ServiceAreaList.SetLen(uint8(len(partialServiceAreaList)))
-			configurationUpdateCommand.ServiceAreaList.SetPartialServiceAreaList(partialServiceAreaList)
+			configurationUpdateCommand.SetPartialServiceAreaList(partialServiceAreaList)
 		} else {
 			logger.GmmLog.Warnf("Require Service Area List, but got nothing.")
 		}
@@ -838,7 +839,7 @@ func BuildConfigurationUpdateCommand(ue *context.AmfUe, anType models.AccessType
 				buf = append(buf, ladnNas...)
 			}
 			configurationUpdateCommand.LADNInformation.SetLen(uint16(len(buf)))
-			configurationUpdateCommand.LADNInformation.SetLADND(buf)
+			configurationUpdateCommand.SetLADND(buf)
 		} else {
 			logger.GmmLog.Warnf("Require LADN Information, but got nothing.")
 		}
@@ -901,17 +902,17 @@ func BuildConfigurationUpdateCommand(ue *context.AmfUe, anType models.AccessType
 		configurationUpdateCommand.SMSIndication != nil {
 		// TS 24.501 - 5.4.4.2 Generic UE configuration update procedure initiated by the network
 		// Acknowledgement shall be requested for all parameters except when only NITZ is included
-		configurationUpdateCommand.ConfigurationUpdateIndication.SetACK(uint8(1))
+		configurationUpdateCommand.SetACK(uint8(1))
 		needTimer = true
 	}
 	if configurationUpdateCommand.MICOIndication != nil {
 		// Allowed NSSAI and Configured NSSAI are optional to request to perform the registration procedure
-		configurationUpdateCommand.ConfigurationUpdateIndication.SetRED(uint8(1))
+		configurationUpdateCommand.SetRED(uint8(1))
 	}
 
 	// Check if the Configuration Update Command is vaild
-	if configurationUpdateCommand.ConfigurationUpdateIndication.GetACK() == uint8(0) &&
-		configurationUpdateCommand.ConfigurationUpdateIndication.GetRED() == uint8(0) &&
+	if configurationUpdateCommand.GetACK() == uint8(0) &&
+		configurationUpdateCommand.GetRED() == uint8(0) &&
 		(configurationUpdateCommand.FullNameForNetwork == nil &&
 			configurationUpdateCommand.ShortNameForNetwork == nil &&
 			configurationUpdateCommand.UniversalTimeAndLocalTimeZone == nil &&
@@ -920,7 +921,7 @@ func BuildConfigurationUpdateCommand(ue *context.AmfUe, anType models.AccessType
 		return nil, fmt.Errorf("Configuration Update Command is invaild"), false
 	}
 
-	m.GmmMessage.ConfigurationUpdateCommand = configurationUpdateCommand
+	m.ConfigurationUpdateCommand = configurationUpdateCommand
 
 	m.SecurityHeader = nas.SecurityHeader{
 		ProtocolDiscriminator: nasMessage.Epd5GSMobilityManagementMessage,
