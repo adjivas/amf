@@ -287,46 +287,46 @@ func (c *Configuration) validate() (bool, error) {
 }
 
 type Sbi struct {
-    Scheme       string `yaml:"scheme" valid:"in(http|https),optional"`
-    RegisterIPv4 string `yaml:"registerIPv4,omitempty" valid:"host,optional"` // IP that is registered at NRF.
-    RegisterIP   string `yaml:"registerIP,omitempty" valid:"host,optional"`   // IP that is registered at NRF.
-    BindingIPv4  string `yaml:"bindingIPv4,omitempty" valid:"host,optional"`  // IP used to run the server in the node.
-    BindingIP    string `yaml:"bindingIP,omitempty" valid:"host,optional"`    // IP used to run the server in the node.
-    Port         int    `yaml:"port,omitempty" valid:"port,optional"`
+	Scheme       string `yaml:"scheme" valid:"in(http|https),optional"`
+	RegisterIPv4 string `yaml:"registerIPv4,omitempty" valid:"host,optional"` // IP that is registered at NRF.
+	RegisterIP   string `yaml:"registerIP,omitempty" valid:"host,optional"`   // IP that is registered at NRF.
+	BindingIPv4  string `yaml:"bindingIPv4,omitempty" valid:"host,optional"`  // IP used to run the server in the node.
+	BindingIP    string `yaml:"bindingIP,omitempty" valid:"host,optional"`    // IP used to run the server in the node.
+	Port         int    `yaml:"port,omitempty" valid:"port,optional"`
 	Tls          *Tls   `yaml:"tls,omitempty" valid:"optional"`
 }
 
 func (s *Sbi) validate() (bool, error) {
-    // Set a default Schme if the Configuration does not provides one
-    if s.Scheme == "" {
-            s.Scheme = AmfSbiDefaultScheme
-    }
+	// Set a default Schme if the Configuration does not provides one
+	if s.Scheme == "" {
+		s.Scheme = AmfSbiDefaultScheme
+	}
 
-    // Set BindingIP/RegisterIP from deprecated BindingIPv4/RegisterIPv4
-    if s.BindingIP == "" && s.BindingIPv4 != "" {
-            s.BindingIP = s.BindingIPv4
-    }
-    if s.RegisterIP == "" && s.RegisterIPv4 != "" {
-            s.RegisterIP = s.RegisterIPv4
-    }
+	// Set BindingIP/RegisterIP from deprecated BindingIPv4/RegisterIPv4
+	if s.BindingIP == "" && s.BindingIPv4 != "" {
+		s.BindingIP = s.BindingIPv4
+	}
+	if s.RegisterIP == "" && s.RegisterIPv4 != "" {
+		s.RegisterIP = s.RegisterIPv4
+	}
 
-    // Set a default BindingIP/RegisterIP if the Configuration does not provides them
-    if s.BindingIP == "" && s.RegisterIP == "" {
-            s.BindingIP = AmfSbiDefaultIP
-            s.RegisterIP = AmfSbiDefaultIP
-    } else {
-            // Complete any missing BindingIP/RegisterIP from RegisterIP/BindingIP
-            if s.BindingIP == "" {
-                    s.BindingIP = s.RegisterIP
-            } else if s.RegisterIP == "" {
-                    s.RegisterIP = s.BindingIP
-            }
-    }
+	// Set a default BindingIP/RegisterIP if the Configuration does not provides them
+	if s.BindingIP == "" && s.RegisterIP == "" {
+		s.BindingIP = AmfSbiDefaultIP
+		s.RegisterIP = AmfSbiDefaultIP
+	} else {
+		// Complete any missing BindingIP/RegisterIP from RegisterIP/BindingIP
+		if s.BindingIP == "" {
+			s.BindingIP = s.RegisterIP
+		} else if s.RegisterIP == "" {
+			s.RegisterIP = s.BindingIP
+		}
+	}
 
-    // Set a default Port if the Configuration does not provides one
-    if s.Port == 0 {
-            s.Port = AmfSbiDefaultPort
-    }
+	// Set a default Port if the Configuration does not provides one
+	if s.Port == 0 {
+		s.Port = AmfSbiDefaultPort
+	}
 
 	if tls := s.Tls; tls != nil {
 		if result, err := tls.validate(); err != nil {
@@ -334,8 +334,8 @@ func (s *Sbi) validate() (bool, error) {
 		}
 	}
 
-    result, err := govalidator.ValidateStruct(s)
-    return result, err
+	result, err := govalidator.ValidateStruct(s)
+	return result, err
 }
 
 type Tls struct {
