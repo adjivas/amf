@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/mohae/deepcopy"
-	"github.com/sirupsen/logrus"
-
 	"github.com/free5gc/amf/internal/logger"
 	"github.com/free5gc/ngap/ngapConvert"
 	"github.com/free5gc/ngap/ngapType"
 	"github.com/free5gc/openapi/models"
+	"github.com/mohae/deepcopy"
+	"github.com/sirupsen/logrus"
 )
 
 type RelAction int
@@ -133,9 +132,10 @@ func (ranUe *RanUe) UpdateLogFields() {
 		}
 
 		anTypeStr := ""
-		if ranUe.Ran.AnType == models.AccessType__3_GPP_ACCESS {
+		switch ranUe.Ran.AnType {
+		case models.AccessType__3_GPP_ACCESS:
 			anTypeStr = "3GPP"
-		} else if ranUe.Ran.AnType == models.AccessType_NON_3_GPP_ACCESS {
+		case models.AccessType_NON_3_GPP_ACCESS:
 			anTypeStr = "Non3GPP"
 		}
 		ranUe.Log = ranUe.Log.WithField(logger.FieldAmfUeNgapID,

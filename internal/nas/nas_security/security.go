@@ -26,11 +26,11 @@ func Encode(ue *context.AmfUe, msg *nas.Message, accessType models.AccessType) (
 		}
 		switch msgType := msg.GmmHeader.GetMessageType(); msgType {
 		case nas.MsgTypeIdentityRequest:
-			if msg.GmmMessage.IdentityRequest == nil {
+			if msg.IdentityRequest == nil {
 				return nil,
 					fmt.Errorf("identity Request (type unknown) is requierd security, but security context is not available")
 			}
-			if identityType := msg.GmmMessage.IdentityRequest.SpareHalfOctetAndIdentityType.GetTypeOfIdentity(); identityType !=
+			if identityType := msg.SpareHalfOctetAndIdentityType.GetTypeOfIdentity(); identityType !=
 				nasMessage.MobileIdentity5GSTypeSuci {
 				return nil,
 					fmt.Errorf("identity Request (%d) is requierd security, but security context is not available", identityType)
@@ -50,7 +50,7 @@ func Encode(ue *context.AmfUe, msg *nas.Message, accessType models.AccessType) (
 		// Security protected NAS Message
 		// a security protected NAS message must be integrity protected, and ciphering is optional
 		needCiphering := false
-		switch msg.SecurityHeader.SecurityHeaderType {
+		switch msg.SecurityHeaderType {
 		case nas.SecurityHeaderTypeIntegrityProtected:
 			ue.NASLog.Debugln("Security header type: Integrity Protected")
 		case nas.SecurityHeaderTypeIntegrityProtectedAndCiphered:
@@ -61,7 +61,7 @@ func Encode(ue *context.AmfUe, msg *nas.Message, accessType models.AccessType) (
 			ue.ULCount.Set(0, 0)
 			ue.DLCount.Set(0, 0)
 		default:
-			return nil, fmt.Errorf("wrong security header type: 0x%0x", msg.SecurityHeader.SecurityHeaderType)
+			return nil, fmt.Errorf("wrong security header type: 0x%0x", msg.SecurityHeaderType)
 		}
 
 		// encode plain nas first
@@ -101,7 +101,7 @@ func Encode(ue *context.AmfUe, msg *nas.Message, accessType models.AccessType) (
 		payload = addmac
 
 		// Add EPD and Security Type
-		msgSecurityHeader := []byte{msg.SecurityHeader.ProtocolDiscriminator, msg.SecurityHeader.SecurityHeaderType}
+		msgSecurityHeader := []byte{msg.ProtocolDiscriminator, msg.SecurityHeaderType}
 		encodepayload := []byte{}
 		encodepayload = append(encodepayload, msgSecurityHeader...)
 		encodepayload = append(encodepayload, payload...)
@@ -169,7 +169,7 @@ func Decode(ue *context.AmfUe, accessType models.AccessType, payload []byte,
 			ciphered = true
 			ulCountNew.Set(0, 0)
 		default:
-			return nil, false, fmt.Errorf("wrong security header type: 0x%0x", msg.SecurityHeader.SecurityHeaderType)
+			return nil, false, fmt.Errorf("wrong security header type: 0x%0x", msg.SecurityHeaderType)
 		}
 
 		if ciphered && !ue.SecurityContextAvailable {
@@ -235,7 +235,7 @@ func Decode(ue *context.AmfUe, accessType models.AccessType, payload []byte,
 		return fmt.Errorf("UE Security Context is not Available, %s", msgTypeText())
 	}
 	errWrongSecurityHeader := func() error {
-		return fmt.Errorf("wrong security header type: 0x%0x, %s", msg.SecurityHeader.SecurityHeaderType, msgTypeText())
+		return fmt.Errorf("wrong security header type: 0x%0x, %s", msg.SecurityHeaderType, msgTypeText())
 	}
 	errMacVerificationFailed := func() error {
 		return fmt.Errorf("MAC verification failed, %s", msgTypeText())
@@ -286,7 +286,7 @@ func Decode(ue *context.AmfUe, accessType models.AccessType, payload []byte,
 				}
 			}
 		case nas.MsgTypeIdentityResponse:
-			mobileIdentityContents := msg.IdentityResponse.MobileIdentity.GetMobileIdentityContents()
+			mobileIdentityContents := msg.GetMobileIdentityContents()
 			if len(mobileIdentityContents) >= 1 &&
 				nasConvert.GetTypeOfIdentity(mobileIdentityContents[0]) == nasMessage.MobileIdentity5GSTypeSuci {
 				// Identity is SUCI
@@ -381,11 +381,12 @@ func DecodePlainNasNoIntegrityCheck(payload []byte) (*nas.Message, error) {
 }
 
 func GetBearerType(accessType models.AccessType) uint8 {
-	if accessType == models.AccessType__3_GPP_ACCESS {
+	switch accessType {
+	case models.AccessType__3_GPP_ACCESS:
 		return security.Bearer3GPP
-	} else if accessType == models.AccessType_NON_3_GPP_ACCESS {
+	case models.AccessType_NON_3_GPP_ACCESS:
 		return security.BearerNon3GPP
-	} else {
+	default:
 		return security.OnlyOneBearer
 	}
 }

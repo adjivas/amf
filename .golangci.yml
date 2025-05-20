@@ -1,3 +1,4 @@
+version: "2"
 
 # options for analysis running
 run:
@@ -46,9 +47,7 @@ run:
 # output configuration options
 output:
   # colored-line-number|line-number|json|tab|checkstyle|code-climate, default is "colored-line-number"
-  formats: 
-    - format: "colored-line-number"
-      path: stdout
+  format: "colored-line-number"
 
   # print lines of code with issue, default is true
   print-issued-lines: true
@@ -141,10 +140,10 @@ linters-settings:
       #- OPTIMIZE # marks code that should be optimized before merging
       #- HACK # marks hack-arounds that should be removed before merging
       - XXX # Fatal! Important problem
-  
-  gofmt:
-    # simplify code: gofmt with `-s` option, true by default
-    simplify: true
+
+  formatters:
+    enable:
+      - gofmt
   
   govet:
     enable-all: false
@@ -227,6 +226,8 @@ linters-settings:
       - standard
       - default
       - prefix(github.com/free5gc)
+    section-separators:
+      - newLine
 
     # Skip generated files.
     # Default: true
@@ -281,8 +282,7 @@ linters:
     - errcheck
     - goconst
     - gocritic
-    - godox
-    - gofmt
+    # - godox
     - govet
     - lll
     - nakedret
@@ -290,13 +290,9 @@ linters:
     - staticcheck
     - unused
     - whitespace
-    - gci
     - misspell
-    - gosimple
     # - gomnd
     - ineffassign
-    - typecheck
-    - gofumpt
     - unconvert
     - predeclared
     - noctx
@@ -347,6 +343,7 @@ issues:
   #new-from-patch: path/to/patch/file
 
 severity:
+  default: error
   # Set the default severity for issues.
   #
   # If severity rules are defined and the issues do not match or no severity is provided to the rule
@@ -361,11 +358,9 @@ severity:
   #
   # Default: ""
   default-severity: error
-  
   # The default value is false.
   # If set to true severity-rules regular expressions become case sensitive.
   case-sensitive: false
-
   # When a list of severity rules are provided, severity information will be added to lint issues.
   # Severity rules have the same filtering capability as exclude rules
   # except you are allowed to specify one matcher per severity rule.
@@ -377,5 +372,5 @@ severity:
   # Default: []
   rules:
     - linters:
-      - gomnd
+        - gomnd
       severity: info

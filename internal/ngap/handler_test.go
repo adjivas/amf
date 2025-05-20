@@ -6,10 +6,6 @@ import (
 	"net"
 	"testing"
 
-	"github.com/google/uuid"
-	. "github.com/smartystreets/goconvey/convey"
-	"github.com/stretchr/testify/require"
-
 	amf_context "github.com/free5gc/amf/internal/context"
 	"github.com/free5gc/amf/internal/logger"
 	nastesting "github.com/free5gc/amf/internal/nas/testing"
@@ -21,6 +17,9 @@ import (
 	"github.com/free5gc/ngap"
 	"github.com/free5gc/ngap/ngapType"
 	"github.com/free5gc/openapi/models"
+	"github.com/google/uuid"
+	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/require"
 )
 
 func NewAmfRan(conn net.Conn) *amf_context.AmfRan {
@@ -313,7 +312,7 @@ func BuildInitialUEMessage(ranUeNgapID int64, nasPdu []byte, fiveGSTmsi string) 
 func TestHandleInitialUEMessage(t *testing.T) {
 	var message *ngapType.NGAPPDU
 	var ranUeNgapID int64 = 1
-	var fiveGSTmsi string = "fe0000000001"
+	var fiveGSTmsi = "fe0000000001"
 	var msg ngapType.NGAPPDU
 
 	testCases := []struct {

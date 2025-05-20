@@ -4,8 +4,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
-
 	"github.com/free5gc/amf/internal/context"
 	gmm_message "github.com/free5gc/amf/internal/gmm/message"
 	"github.com/free5gc/amf/internal/logger"
@@ -15,6 +13,7 @@ import (
 	"github.com/free5gc/nas/nasMessage"
 	"github.com/free5gc/ngap/ngapType"
 	"github.com/free5gc/openapi/models"
+	"github.com/gin-gonic/gin"
 )
 
 // TS23502 4.2.3.3, 4.2.4.3, 4.3.2.2, 4.3.2.3, 4.3.3.2, 4.3.7
@@ -29,13 +28,14 @@ func (p *Processor) HandleN1N2MessageTransferRequest(c *gin.Context,
 	n1n2MessageTransferRspData, locationHeader, problemDetails, transferErr := p.N1N2MessageTransferProcedure(
 		ueContextID, reqUri, n1n2MessageTransferRequest)
 
-	if problemDetails != nil {
+	switch {
+	case problemDetails != nil:
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
-	} else if transferErr != nil {
+	case transferErr != nil:
 		c.JSON(int(transferErr.Error.Status), transferErr)
 		return
-	} else if n1n2MessageTransferRspData != nil {
+	case n1n2MessageTransferRspData != nil:
 		switch n1n2MessageTransferRspData.Cause {
 		case models.N1N2MessageTransferCause_N1_MSG_NOT_TRANSFERRED:
 			fallthrough
@@ -73,15 +73,15 @@ func (p *Processor) N1N2MessageTransferProcedure(ueContextID string, reqUri stri
 	transferErr *models.N1N2MessageTransferError,
 ) {
 	var (
-		requestData *models.N1N2MessageTransferReqData = n1n2MessageTransferRequest.JsonData
-		n2Info      []byte                             = n1n2MessageTransferRequest.BinaryDataN2Information
-		n1Msg       []byte                             = n1n2MessageTransferRequest.BinaryDataN1Message
+		requestData = n1n2MessageTransferRequest.JsonData
+		n2Info      = n1n2MessageTransferRequest.BinaryDataN2Information
+		n1Msg       = n1n2MessageTransferRequest.BinaryDataN1Message
 
 		ue        *context.AmfUe
 		ok        bool
 		smContext *context.SmContext
 		n1MsgType uint8
-		anType    models.AccessType = models.AccessType__3_GPP_ACCESS
+		anType    = models.AccessType__3_GPP_ACCESS
 	)
 
 	amfSelf := context.GetSelf()

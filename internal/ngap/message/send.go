@@ -1026,15 +1026,16 @@ func SendN2Message(
 		return
 	}
 
-	if !ranUe.InitialContextSetup && (ranUe.UeContextRequest ||
-		(pduSessionResourceSetupRequestList != nil && len(pduSessionResourceSetupRequestList.List) > 0)) {
+	switch {
+	case !ranUe.InitialContextSetup && (ranUe.UeContextRequest ||
+		(pduSessionResourceSetupRequestList != nil && len(pduSessionResourceSetupRequestList.List) > 0)):
 		SendInitialContextSetupRequest(amfUe, anType, nasPdu, pduSessionResourceSetupRequestList,
 			rrcInactiveTransitionReportRequest, coreNetworkAssistanceInfo, emergencyFallbackIndicator)
-	} else if ranUe.InitialContextSetup &&
-		(pduSessionResourceSetupRequestList != nil && len(pduSessionResourceSetupRequestList.List) > 0) {
+	case ranUe.InitialContextSetup &&
+		(pduSessionResourceSetupRequestList != nil && len(pduSessionResourceSetupRequestList.List) > 0):
 		suList := ConvertPDUSessionResourceSetupListCxtReqToSUReq(pduSessionResourceSetupRequestList)
 		SendPDUSessionResourceSetupRequest(ranUe, nasPdu, suList)
-	} else {
+	default:
 		SendDownlinkNasTransport(ranUe, nasPdu, mobilityRestrictionList)
 	}
 }

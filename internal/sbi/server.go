@@ -9,9 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
-
 	amf_context "github.com/free5gc/amf/internal/context"
 	"github.com/free5gc/amf/internal/logger"
 	"github.com/free5gc/amf/internal/sbi/consumer"
@@ -22,6 +19,8 @@ import (
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/util/httpwrapper"
 	logger_util "github.com/free5gc/util/logger"
+	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -170,13 +169,14 @@ func (s *Server) startServer(wg *sync.WaitGroup) {
 	var err error
 	cfg := s.Config()
 	scheme := cfg.GetSbiScheme()
-	if scheme == "http" {
+	switch scheme {
+	case "http":
 		err = s.httpServer.ListenAndServe()
-	} else if scheme == "https" {
+	case "https":
 		err = s.httpServer.ListenAndServeTLS(
 			cfg.GetCertPemPath(),
 			cfg.GetCertKeyPath())
-	} else {
+	default:
 		err = fmt.Errorf("no support this scheme[%s]", scheme)
 	}
 

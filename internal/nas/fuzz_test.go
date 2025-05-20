@@ -6,9 +6,6 @@ package nas_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-	"go.uber.org/mock/gomock"
-
 	amf_context "github.com/free5gc/amf/internal/context"
 	"github.com/free5gc/amf/internal/logger"
 	amf_nas "github.com/free5gc/amf/internal/nas"
@@ -19,6 +16,8 @@ import (
 	"github.com/free5gc/nas/nasType"
 	"github.com/free5gc/ngap/ngapType"
 	"github.com/free5gc/openapi/models"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func FuzzHandleNAS(f *testing.F) {
@@ -41,57 +40,57 @@ func FuzzHandleNAS(f *testing.F) {
 
 	msg := nas.NewMessage()
 	msg.GmmMessage = nas.NewGmmMessage()
-	msg.GmmMessage.GmmHeader.SetMessageType(nas.MsgTypeRegistrationRequest)
-	msg.GmmMessage.RegistrationRequest = nasMessage.NewRegistrationRequest(nas.MsgTypeRegistrationRequest)
-	reg := msg.GmmMessage.RegistrationRequest
-	reg.ExtendedProtocolDiscriminator.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
-	reg.SpareHalfOctetAndSecurityHeaderType.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
-	reg.RegistrationRequestMessageIdentity.SetMessageType(nas.MsgTypeRegistrationRequest)
-	reg.NgksiAndRegistrationType5GS.SetTSC(nasMessage.TypeOfSecurityContextFlagNative)
+	msg.GmmMessage.SetMessageType(nas.MsgTypeRegistrationRequest)
+	msg.RegistrationRequest = nasMessage.NewRegistrationRequest(nas.MsgTypeRegistrationRequest)
+	reg := msg.RegistrationRequest
+	reg.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
+	reg.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
+	reg.SetMessageType(nas.MsgTypeRegistrationRequest)
+	reg.SetTSC(nasMessage.TypeOfSecurityContextFlagNative)
 	reg.NgksiAndRegistrationType5GS.SetNasKeySetIdentifiler(7)
-	reg.NgksiAndRegistrationType5GS.SetFOR(1)
-	reg.NgksiAndRegistrationType5GS.SetRegistrationType5GS(nasMessage.RegistrationType5GSInitialRegistration)
+	reg.SetFOR(1)
+	reg.SetRegistrationType5GS(nasMessage.RegistrationType5GSInitialRegistration)
 	id := []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10}
 	reg.MobileIdentity5GS.SetLen(uint16(len(id)))
-	reg.MobileIdentity5GS.SetMobileIdentity5GSContents(id)
+	reg.SetMobileIdentity5GSContents(id)
 	reg.UESecurityCapability = nasType.NewUESecurityCapability(nasMessage.RegistrationRequestUESecurityCapabilityType)
 	reg.UESecurityCapability.SetLen(2)
-	reg.UESecurityCapability.SetEA0_5G(1)
-	reg.UESecurityCapability.SetIA2_128_5G(1)
+	reg.SetEA0_5G(1)
+	reg.SetIA2_128_5G(1)
 	buf, err := msg.PlainNasEncode()
 	require.NoError(f, err)
 	f.Add(buf)
 
 	msg = nas.NewMessage()
 	msg.GmmMessage = nas.NewGmmMessage()
-	msg.GmmMessage.GmmHeader.SetMessageType(nas.MsgTypeDeregistrationRequestUEOriginatingDeregistration)
+	msg.GmmHeader.SetMessageType(nas.MsgTypeDeregistrationRequestUEOriginatingDeregistration)
 	deReg := nasMessage.NewDeregistrationRequestUEOriginatingDeregistration(
 		nas.MsgTypeDeregistrationRequestUEOriginatingDeregistration)
-	msg.GmmMessage.DeregistrationRequestUEOriginatingDeregistration = deReg
-	deReg.ExtendedProtocolDiscriminator.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
-	deReg.SpareHalfOctetAndSecurityHeaderType.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
-	deReg.DeregistrationRequestMessageIdentity.SetMessageType(nas.MsgTypeDeregistrationRequestUEOriginatingDeregistration)
-	deReg.NgksiAndDeregistrationType.SetTSC(nasMessage.TypeOfSecurityContextFlagNative)
-	deReg.NgksiAndDeregistrationType.SetNasKeySetIdentifiler(7)
-	deReg.NgksiAndDeregistrationType.SetSwitchOff(0)
-	deReg.NgksiAndDeregistrationType.SetAccessType(nasMessage.AccessType3GPP)
-	deReg.MobileIdentity5GS.SetLen(uint16(len(id)))
-	deReg.MobileIdentity5GS.SetMobileIdentity5GSContents(id)
+	msg.DeregistrationRequestUEOriginatingDeregistration = deReg
+	deReg.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
+	deReg.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
+	deReg.SetMessageType(nas.MsgTypeDeregistrationRequestUEOriginatingDeregistration)
+	deReg.SetTSC(nasMessage.TypeOfSecurityContextFlagNative)
+	deReg.SetNasKeySetIdentifiler(7)
+	deReg.SetSwitchOff(0)
+	deReg.SetAccessType(nasMessage.AccessType3GPP)
+	deReg.SetLen(uint16(len(id)))
+	deReg.SetMobileIdentity5GSContents(id)
 	buf, err = msg.PlainNasEncode()
 	require.NoError(f, err)
 	f.Add(buf)
 
 	msg = nas.NewMessage()
 	msg.GmmMessage = nas.NewGmmMessage()
-	msg.GmmMessage.GmmHeader.SetMessageType(nas.MsgTypeServiceRequest)
-	msg.GmmMessage.ServiceRequest = nasMessage.NewServiceRequest(nas.MsgTypeServiceRequest)
-	sr := msg.GmmMessage.ServiceRequest
-	sr.ExtendedProtocolDiscriminator.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
-	sr.SpareHalfOctetAndSecurityHeaderType.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
-	sr.ServiceRequestMessageIdentity.SetMessageType(nas.MsgTypeServiceRequest)
-	sr.ServiceTypeAndNgksi.SetTSC(nasMessage.TypeOfSecurityContextFlagNative)
-	sr.ServiceTypeAndNgksi.SetNasKeySetIdentifiler(0)
-	sr.ServiceTypeAndNgksi.SetServiceTypeValue(nasMessage.ServiceTypeSignalling)
+	msg.GmmHeader.SetMessageType(nas.MsgTypeServiceRequest)
+	msg.ServiceRequest = nasMessage.NewServiceRequest(nas.MsgTypeServiceRequest)
+	sr := msg.ServiceRequest
+	sr.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
+	sr.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
+	sr.SetMessageType(nas.MsgTypeServiceRequest)
+	sr.SetTSC(nasMessage.TypeOfSecurityContextFlagNative)
+	sr.SetNasKeySetIdentifiler(0)
+	sr.SetServiceTypeValue(nasMessage.ServiceTypeSignalling)
 	sr.TMSI5GS.SetLen(7)
 	buf, err = msg.PlainNasEncode()
 	require.NoError(f, err)
@@ -136,48 +135,48 @@ func FuzzHandleNAS2(f *testing.F) {
 
 	msg := nas.NewMessage()
 	msg.GmmMessage = nas.NewGmmMessage()
-	msg.GmmMessage.GmmHeader.SetMessageType(nas.MsgTypeRegistrationRequest)
-	msg.GmmMessage.RegistrationRequest = nasMessage.NewRegistrationRequest(nas.MsgTypeRegistrationRequest)
-	reg := msg.GmmMessage.RegistrationRequest
-	reg.ExtendedProtocolDiscriminator.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
-	reg.SpareHalfOctetAndSecurityHeaderType.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
-	reg.RegistrationRequestMessageIdentity.SetMessageType(nas.MsgTypeRegistrationRequest)
-	reg.NgksiAndRegistrationType5GS.SetTSC(nasMessage.TypeOfSecurityContextFlagNative)
+	msg.GmmHeader.SetMessageType(nas.MsgTypeRegistrationRequest)
+	msg.RegistrationRequest = nasMessage.NewRegistrationRequest(nas.MsgTypeRegistrationRequest)
+	reg := msg.RegistrationRequest
+	reg.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
+	reg.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
+	reg.SetMessageType(nas.MsgTypeRegistrationRequest)
+	reg.SetTSC(nasMessage.TypeOfSecurityContextFlagNative)
 	reg.NgksiAndRegistrationType5GS.SetNasKeySetIdentifiler(7)
-	reg.NgksiAndRegistrationType5GS.SetFOR(1)
-	reg.NgksiAndRegistrationType5GS.SetRegistrationType5GS(nasMessage.RegistrationType5GSInitialRegistration)
+	reg.SetFOR(1)
+	reg.SetRegistrationType5GS(nasMessage.RegistrationType5GSInitialRegistration)
 	id := []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10}
 	reg.MobileIdentity5GS.SetLen(uint16(len(id)))
-	reg.MobileIdentity5GS.SetMobileIdentity5GSContents(id)
+	reg.SetMobileIdentity5GSContents(id)
 	reg.UESecurityCapability = nasType.NewUESecurityCapability(nasMessage.RegistrationRequestUESecurityCapabilityType)
 	reg.UESecurityCapability.SetLen(2)
-	reg.UESecurityCapability.SetEA0_5G(1)
-	reg.UESecurityCapability.SetIA2_128_5G(1)
+	reg.SetEA0_5G(1)
+	reg.SetIA2_128_5G(1)
 	regPkt, err := msg.PlainNasEncode()
 	require.NoError(f, err)
 
 	msg = nas.NewMessage()
 	msg.GmmMessage = nas.NewGmmMessage()
-	msg.GmmMessage.GmmHeader.SetMessageType(nas.MsgTypeIdentityResponse)
-	msg.GmmMessage.IdentityResponse = nasMessage.NewIdentityResponse(nas.MsgTypeIdentityResponse)
-	ir := msg.GmmMessage.IdentityResponse
-	ir.ExtendedProtocolDiscriminator.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
-	ir.SpareHalfOctetAndSecurityHeaderType.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
-	ir.IdentityResponseMessageIdentity.SetMessageType(nas.MsgTypeIdentityResponse)
-	ir.MobileIdentity.SetLen(uint16(len(id)))
-	ir.MobileIdentity.SetMobileIdentityContents(id)
+	msg.GmmHeader.SetMessageType(nas.MsgTypeIdentityResponse)
+	msg.IdentityResponse = nasMessage.NewIdentityResponse(nas.MsgTypeIdentityResponse)
+	ir := msg.IdentityResponse
+	ir.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
+	ir.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
+	ir.SetMessageType(nas.MsgTypeIdentityResponse)
+	ir.SetLen(uint16(len(id)))
+	ir.SetMobileIdentityContents(id)
 	buf, err := msg.PlainNasEncode()
 	require.NoError(f, err)
 	f.Add(buf)
 
 	msg = nas.NewMessage()
 	msg.GmmMessage = nas.NewGmmMessage()
-	msg.GmmMessage.GmmHeader.SetMessageType(nas.MsgTypeAuthenticationResponse)
-	msg.GmmMessage.AuthenticationResponse = nasMessage.NewAuthenticationResponse(nas.MsgTypeAuthenticationResponse)
-	ar := msg.GmmMessage.AuthenticationResponse
-	ar.ExtendedProtocolDiscriminator.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
-	ar.SpareHalfOctetAndSecurityHeaderType.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
-	ar.AuthenticationResponseMessageIdentity.SetMessageType(nas.MsgTypeAuthenticationResponse)
+	msg.GmmHeader.SetMessageType(nas.MsgTypeAuthenticationResponse)
+	msg.AuthenticationResponse = nasMessage.NewAuthenticationResponse(nas.MsgTypeAuthenticationResponse)
+	ar := msg.AuthenticationResponse
+	ar.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
+	ar.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
+	ar.SetMessageType(nas.MsgTypeAuthenticationResponse)
 	ar.AuthenticationResponseParameter = nasType.NewAuthenticationResponseParameter(
 		nasMessage.AuthenticationResponseAuthenticationResponseParameterType)
 	ar.AuthenticationResponseParameter.SetLen(16)
@@ -187,29 +186,29 @@ func FuzzHandleNAS2(f *testing.F) {
 
 	msg = nas.NewMessage()
 	msg.GmmMessage = nas.NewGmmMessage()
-	msg.GmmMessage.GmmHeader.SetMessageType(nas.MsgTypeAuthenticationFailure)
-	msg.GmmMessage.AuthenticationFailure = nasMessage.NewAuthenticationFailure(nas.MsgTypeAuthenticationFailure)
-	af := msg.GmmMessage.AuthenticationFailure
-	af.ExtendedProtocolDiscriminator.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
-	af.SpareHalfOctetAndSecurityHeaderType.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
-	af.AuthenticationFailureMessageIdentity.SetMessageType(nas.MsgTypeAuthenticationFailure)
-	af.Cause5GMM.SetCauseValue(nasMessage.Cause5GMMSynchFailure)
+	msg.GmmHeader.SetMessageType(nas.MsgTypeAuthenticationFailure)
+	msg.AuthenticationFailure = nasMessage.NewAuthenticationFailure(nas.MsgTypeAuthenticationFailure)
+	af := msg.AuthenticationFailure
+	af.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
+	af.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
+	af.SetMessageType(nas.MsgTypeAuthenticationFailure)
+	af.SetCauseValue(nasMessage.Cause5GMMSynchFailure)
 	af.AuthenticationFailureParameter = nasType.NewAuthenticationFailureParameter(
 		nasMessage.AuthenticationFailureAuthenticationFailureParameterType)
-	af.AuthenticationFailureParameter.SetLen(14)
+	af.SetLen(14)
 	buf, err = msg.PlainNasEncode()
 	require.NoError(f, err)
 	f.Add(buf)
 
 	msg = nas.NewMessage()
 	msg.GmmMessage = nas.NewGmmMessage()
-	msg.GmmMessage.GmmHeader.SetMessageType(nas.MsgTypeStatus5GMM)
-	msg.GmmMessage.Status5GMM = nasMessage.NewStatus5GMM(nas.MsgTypeStatus5GMM)
-	st := msg.GmmMessage.Status5GMM
-	st.ExtendedProtocolDiscriminator.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
-	st.SpareHalfOctetAndSecurityHeaderType.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
-	st.STATUSMessageIdentity5GMM.SetMessageType(nas.MsgTypeStatus5GMM)
-	st.Cause5GMM.SetCauseValue(nasMessage.Cause5GMMProtocolErrorUnspecified)
+	msg.GmmHeader.SetMessageType(nas.MsgTypeStatus5GMM)
+	msg.Status5GMM = nasMessage.NewStatus5GMM(nas.MsgTypeStatus5GMM)
+	st := msg.Status5GMM
+	st.SetExtendedProtocolDiscriminator(nasMessage.Epd5GSMobilityManagementMessage)
+	st.SetSecurityHeaderType(nas.SecurityHeaderTypePlainNas)
+	st.SetMessageType(nas.MsgTypeStatus5GMM)
+	st.SetCauseValue(nasMessage.Cause5GMMProtocolErrorUnspecified)
 	buf, err = msg.PlainNasEncode()
 	require.NoError(f, err)
 	f.Add(buf)

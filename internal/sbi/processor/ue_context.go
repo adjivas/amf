@@ -6,14 +6,13 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
-
 	"github.com/free5gc/amf/internal/context"
 	gmm_common "github.com/free5gc/amf/internal/gmm/common"
 	"github.com/free5gc/amf/internal/logger"
 	"github.com/free5gc/amf/internal/nas/nas_security"
 	"github.com/free5gc/nas/security"
 	"github.com/free5gc/openapi/models"
+	"github.com/gin-gonic/gin"
 )
 
 // TS 29.518 5.2.2.2.3
@@ -505,11 +504,12 @@ func (p *Processor) HandleAssignEbiDataRequest(c *gin.Context, assignEbiData mod
 	ueContextID := c.Param("ueContextId")
 
 	assignedEbiData, assignEbiError, problemDetails := p.AssignEbiDataProcedure(ueContextID, assignEbiData)
-	if problemDetails != nil {
+	switch {
+	case problemDetails != nil:
 		c.JSON(int(problemDetails.Status), problemDetails)
-	} else if assignEbiError != nil {
+	case assignEbiError != nil:
 		c.JSON(int(assignEbiError.Error.Status), assignEbiError)
-	} else {
+	default:
 		c.JSON(http.StatusOK, assignedEbiData)
 	}
 }

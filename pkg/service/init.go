@@ -7,8 +7,6 @@ import (
 	"runtime/debug"
 	"sync"
 
-	"github.com/sirupsen/logrus"
-
 	amf_context "github.com/free5gc/amf/internal/context"
 	"github.com/free5gc/amf/internal/logger"
 	"github.com/free5gc/amf/internal/ngap"
@@ -21,6 +19,7 @@ import (
 	"github.com/free5gc/amf/pkg/app"
 	"github.com/free5gc/amf/pkg/factory"
 	"github.com/free5gc/openapi/models"
+	"github.com/sirupsen/logrus"
 )
 
 type AmfAppInterface interface {
@@ -210,11 +209,12 @@ func (a *AmfApp) terminateProcedure() {
 	a.CallServerStop()
 	// deregister with NRF
 	problemDetails, err_deg := a.Consumer().SendDeregisterNFInstance()
-	if problemDetails != nil {
+	switch {
+	case problemDetails != nil:
 		logger.MainLog.Errorf("Deregister NF instance Failed Problem[%+v]", problemDetails)
-	} else if err_deg != nil {
+	case err_deg != nil:
 		logger.MainLog.Errorf("Deregister NF instance Error[%+v]", err_deg)
-	} else {
+	default:
 		logger.MainLog.Infof("[AMF] Deregister from NRF successfully")
 	}
 

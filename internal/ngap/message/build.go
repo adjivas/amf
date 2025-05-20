@@ -455,7 +455,7 @@ func BuildUEContextReleaseCommand(
 	}
 	switch causePresent {
 	case ngapType.CausePresentNothing:
-		return nil, fmt.Errorf("Cause Present is Nothing")
+		return nil, fmt.Errorf("cause Present is Nothing")
 	case ngapType.CausePresentRadioNetwork:
 		ngapCause.RadioNetwork = new(ngapType.CauseRadioNetwork)
 		ngapCause.RadioNetwork.Value = cause
@@ -472,7 +472,7 @@ func BuildUEContextReleaseCommand(
 		ngapCause.Misc = new(ngapType.CauseMisc)
 		ngapCause.Misc.Value = cause
 	default:
-		return nil, fmt.Errorf("Cause Present is Unknown")
+		return nil, fmt.Errorf("cause Present is Unknown")
 	}
 	ie.Value.Cause = &ngapCause
 
@@ -2243,7 +2243,7 @@ func BuildPaging(
 
 	taiListForPaging := ie.Value.TAIListForPaging
 	if ue.RegistrationArea[models.AccessType__3_GPP_ACCESS] == nil {
-		err = fmt.Errorf("Registration Area of Ue[%s] is empty", ue.Supi)
+		err = fmt.Errorf("registration Area of Ue[%s] is empty", ue.Supi)
 		return nil, err
 	} else {
 		for _, tai := range ue.RegistrationArea[models.AccessType__3_GPP_ACCESS] {

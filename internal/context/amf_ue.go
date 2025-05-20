@@ -10,8 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/free5gc/amf/internal/logger"
 	"github.com/free5gc/amf/pkg/factory"
 	"github.com/free5gc/nas/nasMessage"
@@ -22,6 +20,7 @@ import (
 	"github.com/free5gc/util/fsm"
 	"github.com/free5gc/util/idgenerator"
 	"github.com/free5gc/util/ueauth"
+	"github.com/sirupsen/logrus"
 )
 
 type OnGoingProcedure string
@@ -340,9 +339,10 @@ func (ue *AmfUe) AttachRanUe(ranUe *RanUe) {
 
 func (ue *AmfUe) UpdateLogFields(accessType models.AccessType) {
 	anTypeStr := ""
-	if accessType == models.AccessType__3_GPP_ACCESS {
+	switch accessType {
+	case models.AccessType__3_GPP_ACCESS:
 		anTypeStr = "3GPP"
-	} else if accessType == models.AccessType_NON_3_GPP_ACCESS {
+	case models.AccessType_NON_3_GPP_ACCESS:
 		anTypeStr = "Non3GPP"
 	}
 	if ranUe, ok := ue.RanUe[accessType]; ok {
@@ -445,6 +445,7 @@ func (ue *AmfUe) SecurityContextIsValid() bool {
 
 // Kamf Derivation function defined in TS 33.501 Annex A.7
 func (ue *AmfUe) DerivateKamf() {
+	//nolint:gocritic // we want to handle regexp compile errors gracefully
 	supiRegexp, err := regexp.Compile("(?:imsi|supi)-([0-9]{5,15})")
 	if err != nil {
 		logger.CtxLog.Error(err)

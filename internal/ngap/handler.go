@@ -181,11 +181,12 @@ func handleNGResetAcknowledgeMain(ran *context.AmfRan,
 	if uEAssociatedLogicalNGConnectionList != nil {
 		ran.Log.Tracef("%d UE association(s) has been reset", len(uEAssociatedLogicalNGConnectionList.List))
 		for i, item := range uEAssociatedLogicalNGConnectionList.List {
-			if item.AMFUENGAPID != nil && item.RANUENGAPID != nil {
+			switch {
+			case item.AMFUENGAPID != nil && item.RANUENGAPID != nil:
 				ran.Log.Tracef("%d: AmfUeNgapID[%d] RanUeNgapID[%d]", i+1, item.AMFUENGAPID.Value, item.RANUENGAPID.Value)
-			} else if item.AMFUENGAPID != nil {
+			case item.AMFUENGAPID != nil:
 				ran.Log.Tracef("%d: AmfUeNgapID[%d] RanUeNgapID[-1]", i+1, item.AMFUENGAPID.Value)
-			} else if item.RANUENGAPID != nil {
+			case item.RANUENGAPID != nil:
 				ran.Log.Tracef("%d: AmfUeNgapID[-1] RanUeNgapID[%d]", i+1, item.RANUENGAPID.Value)
 			}
 		}
@@ -376,12 +377,13 @@ func handlePDUSessionResourceReleaseResponseMain(ran *context.AmfRan,
 			_, responseErr, problemDetail, err := consumer.GetConsumer().SendUpdateSmContextN2Info(amfUe, smContext,
 				models.N2SmInfoType_PDU_RES_REL_RSP, transfer)
 			// TODO: error handling
-			if err != nil {
+			switch {
+			case err != nil:
 				ranUe.Log.Errorf("SendUpdateSmContextN2Info[PDUSessionResourceReleaseResponse] Error: %+v", err)
-			} else if responseErr != nil && responseErr.JsonData.Error != nil {
+			case responseErr != nil && responseErr.JsonData.Error != nil:
 				ranUe.Log.Errorf("SendUpdateSmContextN2Info[PDUSessionResourceReleaseResponse] Error: %+v",
 					responseErr.JsonData.Error.Cause)
-			} else if problemDetail != nil {
+			case problemDetail != nil:
 				ranUe.Log.Errorf("SendUpdateSmContextN2Info[PDUSessionResourceReleaseResponse] Failed: %+v", problemDetail)
 			}
 		}
@@ -449,13 +451,14 @@ func handleInitialUEMessageMain(ran *context.AmfRan,
 	nasMsg, err := nas_security.DecodePlainNasNoIntegrityCheck(nASPDU.Value)
 	if err == nil && nasMsg.GmmMessage != nil {
 		gmmMessage = nasMsg.GmmMessage
-		nasMsgType = gmmMessage.GmmHeader.GetMessageType()
+		nasMsgType = gmmMessage.GetMessageType()
 		if gmmMessage.RegistrationRequest != nil {
-			regReqType = gmmMessage.RegistrationRequest.NgksiAndRegistrationType5GS.GetRegistrationType5GS()
+			regReqType = gmmMessage.GetRegistrationType5GS()
 		}
 	}
 
-	if fiveGSTMSI != nil {
+	switch {
+	case fiveGSTMSI != nil:
 		// <5G-S-TMSI> := <AMF Set ID><AMF Pointer><5G-TMSI>
 		// GUAMI := <MCC><MNC><AMF Region ID><AMF Set ID><AMF Pointer>
 		// 5G-GUTI := <GUAMI><5G-TMSI>
@@ -468,13 +471,13 @@ func handleInitialUEMessageMain(ran *context.AmfRan,
 		id = amfSetPtrID + tmsi
 		idType = "5G-S-TMSI"
 		ranUe.Log.Infof("Find 5G-S-TMSI [%q] in InitialUEMessage", id)
-	} else if regReqType == nasMessage.RegistrationType5GSInitialRegistration {
+	case regReqType == nasMessage.RegistrationType5GSInitialRegistration:
 		// NGAP 5G-S-TMSI IE might not be present in InitialUEMessage carrying Initial Registration.
 		// Need to get 5GSMobileIdentity from Initial Registration.
 
 		id, idType, err = amf_nas.GetNas5GSMobileIdentity(gmmMessage)
 		ran.Log.Infof("5GSMobileIdentity [%q:%q, err: %v]", idType, id, err)
-	} else {
+	default:
 		// Missing NGAP 5G-S-TMSI IE
 		var iesCriticalityDiagnostics ngapType.CriticalityDiagnosticsIEList
 		ranUe.Log.Warnf("Missing 5G-S-TMSI IE in InitialUEMessage; send ErrorIndication")
@@ -490,7 +493,7 @@ func handleInitialUEMessageMain(ran *context.AmfRan,
 
 	// If id type is GUTI, since MAC can't be checked here (no amfUe context), the GUTI may not direct to the right amfUe.
 	// In this case, create a new amfUe to handle the following registration procedure.
-	var isInvalidGUTI bool = (idType == "5G-GUTI")
+	var isInvalidGUTI = (idType == "5G-GUTI")
 	amfUe, ok := findAmfUe(ran, id, idType)
 	if ok && !isInvalidGUTI {
 		// TODO: invoke Namf_Communication_UEContextTransfer if serving AMF has changed since
@@ -771,7 +774,8 @@ func handlePDUSessionResourceNotifyMain(ran *context.AmfRan,
 				ranUe.Log.Errorf("SendUpdateSmContextN2Info[PDUSessionResourceNotifyTransfer] Error: %+v", err)
 			}
 
-			if response != nil {
+			switch {
+			case response != nil:
 				responseData := response.JsonData
 				n2Info := response.BinaryDataN1SmMessage
 				n1Msg := response.BinaryDataN2SmInformation
@@ -794,7 +798,7 @@ func handlePDUSessionResourceNotifyMain(ran *context.AmfRan,
 					default:
 					}
 				}
-			} else if errResponse != nil {
+			case errResponse != nil:
 				errJSON := errResponse.JsonData
 				n1Msg := errResponse.BinaryDataN2SmInformation
 				ranUe.Log.Warnf("PDU Session Modification is rejected by SMF[pduSessionId:%d], Error[%s]\n",
@@ -804,9 +808,9 @@ func handlePDUSessionResourceNotifyMain(ran *context.AmfRan,
 						ranUe, nasMessage.PayloadContainerTypeN1SMInfo, errResponse.BinaryDataN1SmMessage, pduSessionID, 0, nil, 0)
 				}
 				// TODO: handle n2 info transfer
-			} else if err != nil {
+			case err != nil:
 				return
-			} else {
+			default:
 				// TODO: error handling
 				ranUe.Log.Errorf("Failed to Update smContext[pduSessionID: %d], Error[%v]", pduSessionID, problemDetail)
 				return
@@ -830,7 +834,8 @@ func handlePDUSessionResourceNotifyMain(ran *context.AmfRan,
 			if err != nil {
 				ranUe.Log.Errorf("SendUpdateSmContextN2Info[PDUSessionResourceNotifyReleasedTransfer] Error: %+v", err)
 			}
-			if response != nil {
+			switch {
+			case response != nil:
 				responseData := response.JsonData
 				n2Info := response.BinaryDataN1SmMessage
 				n1Msg := response.BinaryDataN2SmInformation
@@ -851,7 +856,7 @@ func handlePDUSessionResourceNotifyMain(ran *context.AmfRan,
 						ngap_message.SendPDUSessionResourceReleaseCommand(ranUe, nasPdu, list)
 					}
 				}
-			} else if errResponse != nil {
+			case errResponse != nil:
 				errJSON := errResponse.JsonData
 				n1Msg := errResponse.BinaryDataN2SmInformation
 				ranUe.Log.Warnf("PDU Session Release is rejected by SMF[pduSessionID:%d], Error[%s]\n",
@@ -860,9 +865,9 @@ func handlePDUSessionResourceNotifyMain(ran *context.AmfRan,
 					gmm_message.SendDLNASTransport(
 						ranUe, nasMessage.PayloadContainerTypeN1SMInfo, errResponse.BinaryDataN1SmMessage, pduSessionID, 0, nil, 0)
 				}
-			} else if err != nil {
+			case err != nil:
 				return
-			} else {
+			default:
 				// TODO: error handling
 				ranUe.Log.Errorf("Failed to Update smContext[pduSessionID: %d], Error[%v]", pduSessionID, problemDetail)
 				return
@@ -1339,7 +1344,8 @@ func handlePathSwitchRequestMain(ran *context.AmfRan,
 
 	// TS 23.502 4.9.1.2.2 step 7: send ack to Target NG-RAN. If none of the requested PDU Sessions have been switched
 	// successfully, the AMF shall send an N2 Path Switch Request Failure message to the Target NG-RAN
-	if len(pduSessionResourceSwitchedList.List) > 0 {
+	switch {
+	case len(pduSessionResourceSwitchedList.List) > 0:
 		// TODO: set newSecurityContextIndicator to true if there is a new security context
 		err := ranUe.SwitchToRan(ran, rANUENGAPID.Value)
 		if err != nil {
@@ -1348,10 +1354,10 @@ func handlePathSwitchRequestMain(ran *context.AmfRan,
 		}
 		ngap_message.SendPathSwitchRequestAcknowledge(ranUe, pduSessionResourceSwitchedList,
 			pduSessionResourceReleasedListPSAck, false, nil, nil, nil)
-	} else if len(pduSessionResourceReleasedListPSFail.List) > 0 {
+	case len(pduSessionResourceReleasedListPSFail.List) > 0:
 		ngap_message.SendPathSwitchRequestFailure(ran, sourceAMFUENGAPID.Value, rANUENGAPID.Value,
 			&pduSessionResourceReleasedListPSFail, nil)
-	} else {
+	default:
 		ngap_message.SendPathSwitchRequestFailure(ran, sourceAMFUENGAPID.Value, rANUENGAPID.Value, nil, nil)
 	}
 }
