@@ -1028,11 +1028,11 @@ func SendN2Message(
 
 	switch {
 	case !ranUe.InitialContextSetup && (ranUe.UeContextRequest ||
-	(pduSessionResourceSetupRequestList != nil && len(pduSessionResourceSetupRequestList.List) > 0)):
+		(pduSessionResourceSetupRequestList != nil && len(pduSessionResourceSetupRequestList.List) > 0)):
 		SendInitialContextSetupRequest(amfUe, anType, nasPdu, pduSessionResourceSetupRequestList,
 			rrcInactiveTransitionReportRequest, coreNetworkAssistanceInfo, emergencyFallbackIndicator)
 	case ranUe.InitialContextSetup &&
-	(pduSessionResourceSetupRequestList != nil && len(pduSessionResourceSetupRequestList.List) > 0):
+		(pduSessionResourceSetupRequestList != nil && len(pduSessionResourceSetupRequestList.List) > 0):
 		suList := ConvertPDUSessionResourceSetupListCxtReqToSUReq(pduSessionResourceSetupRequestList)
 		SendPDUSessionResourceSetupRequest(ranUe, nasPdu, suList)
 	default:
