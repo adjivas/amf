@@ -9,9 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
-
 	amf_context "github.com/free5gc/amf/internal/context"
 	"github.com/free5gc/amf/internal/logger"
 	"github.com/free5gc/amf/internal/sbi/consumer"
@@ -22,6 +19,8 @@ import (
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/util/httpwrapper"
 	logger_util "github.com/free5gc/util/logger"
+	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 var (
