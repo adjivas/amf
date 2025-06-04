@@ -39,7 +39,7 @@ func (s *neirService) getEIRSelectionClient(uri string) *Neir_EIRSelection.APICl
 	return client
 }
 
-func (s *neirService) GetEquipementStatus(uri string, imei string) (*Neir_EIRSelection.EIREquipementStatusGetResponse, error) {
+func (s *neirService) GetEquipmentStatus(uri string, imei string) (*Neir_EIRSelection.EIREquipmentStatusGetResponse, error) {
 	client := s.getEIRSelectionClient(uri)
 	if client == nil {
 		return nil, openapi.ReportError("eir not found")
@@ -50,5 +50,5 @@ func (s *neirService) GetEquipementStatus(uri string, imei string) (*Neir_EIRSel
 		return nil, err
 	}
 
-	return client.EIREquipementStatusApi.EIREquipementStatusGet(ctx, imei)
+	return client.EIREquipmentStatusApi.EIREquipmentStatusGet(ctx, imei)
 }

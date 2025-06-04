@@ -6,32 +6,32 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestStr2EirEquipementStatusWhitelisted(t *testing.T) {
-	status := Str2EirEquipementStatus("WHITELISTED")
+func TestStr2EirEquipmentStatusWhitelisted(t *testing.T) {
+	status := Str2EirEquipmentStatus("WHITELISTED")
 
 	assert.Equal(t, EIRWhitelisted, status)
 }
 
-func TestStr2EirEquipementStatusGreylisted(t *testing.T) {
-	status := Str2EirEquipementStatus("GREYLISTED")
+func TestStr2EirEquipmentStatusGreylisted(t *testing.T) {
+	status := Str2EirEquipmentStatus("GREYLISTED")
 
 	assert.Equal(t, EIRGreylisted, status)
 }
 
-func TestStr2EirEquipementStatusBlacklisted(t *testing.T) {
-	status := Str2EirEquipementStatus("BLACKLISTED")
+func TestStr2EirEquipmentStatusBlacklisted(t *testing.T) {
+	status := Str2EirEquipmentStatus("BLACKLISTED")
 
 	assert.Equal(t, EIRBlacklisted, status)
 }
 
-func TestEirEquipementStatus2StrUnknownlisted(t *testing.T) {
-	status := Str2EirEquipementStatus("PINKLISTED")
+func TestEirEquipmentStatus2StrUnknownlisted(t *testing.T) {
+	status := Str2EirEquipmentStatus("PINKLISTED")
 
 	assert.Equal(t, EIRUnknownlisted, status)
 }
 
-func TestEirEquipementStatus2StrWhitelisted(t *testing.T) {
-	status := EirEquipementStatus2Str(EIRWhitelisted)
+func TestEirEquipmentStatus2StrWhitelisted(t *testing.T) {
+	status := EirEquipmentStatus2Str(EIRWhitelisted)
 
 	assert.Equal(t, "WHITELISTED", status)
 }

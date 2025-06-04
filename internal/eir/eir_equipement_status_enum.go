@@ -1,16 +1,16 @@
 package context
 
-type EirEquipementStatus int
+type EirEquipmentStatus int
 
 const (
-	EIRWhitelisted   EirEquipementStatus = 0
-	EIRGreylisted    EirEquipementStatus = 1
-	EIRBlacklisted   EirEquipementStatus = 2
-	EIRUnknownlisted EirEquipementStatus = 3
+	EIRWhitelisted   EirEquipmentStatus = 0
+	EIRGreylisted    EirEquipmentStatus = 1
+	EIRBlacklisted   EirEquipmentStatus = 2
+	EIRUnknownlisted EirEquipmentStatus = 3
 )
 
-func Str2EirEquipementStatus(eirEquipementStatus string) EirEquipementStatus {
-	switch eirEquipementStatus {
+func Str2EirEquipmentStatus(eirEquipmentStatus string) EirEquipmentStatus {
+	switch eirEquipmentStatus {
 	case "WHITELISTED":
 		return EIRWhitelisted
 	case "GREYLISTED":
@@ -22,8 +22,8 @@ func Str2EirEquipementStatus(eirEquipementStatus string) EirEquipementStatus {
 	}
 }
 
-func EirEquipementStatus2Str(eirEquipementStatus EirEquipementStatus) string {
-	switch eirEquipementStatus {
+func EirEquipmentStatus2Str(eirEquipmentStatus EirEquipmentStatus) string {
+	switch eirEquipmentStatus {
 	case EIRWhitelisted:
 		return "WHITELISTED"
 	case EIRGreylisted:

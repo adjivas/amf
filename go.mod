@@ -2,7 +2,7 @@ module github.com/free5gc/amf
 
 go 1.21
 
-replace github.com/free5gc/openapi => github.com/adjivas/openapi v0.0.0-20250519173940-34d38e8acf6d
+replace github.com/free5gc/openapi => github.com/adjivas/openapi v0.0.0-20250604094109-fe68cc0e1306
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
