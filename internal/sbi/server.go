@@ -106,6 +106,7 @@ func newRouter(s *Server) *gin.Engine {
 			amfLocationRoutes := s.getLocationRoutes()
 			routerAuthorizationCheck := util_oauth.NewRouterAuthorizationCheck(models.ServiceName_NAMF_LOC)
 			amfLocationGroup.Use(func(c *gin.Context) {
+				// logger.InitLog.Debugf("AMF [%+v]", c)
 				routerAuthorizationCheck.Check(c, amf_context.GetSelf())
 			})
 			applyRoutes(amfLocationGroup, amfLocationRoutes)
