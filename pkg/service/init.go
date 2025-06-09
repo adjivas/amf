@@ -159,7 +159,7 @@ func (a *AmfApp) Start() {
 		if err != nil {
 			logger.MainLog.Warnf("Search Eir instance failed %+v", err)
 		} else {
-			a.Context().EIRRegistrationInfo = EIRRegistrationInfo
+			a.Context().EIRRegistrationInfo.Store(EIRRegistrationInfo)
 			logger.InitLog.Infof("Select the Eir instance [%+v] from [%+v]", EIRRegistrationInfo.EIRApiPrefix, EIRRegistrationInfo.NfInstanceUri)
 		}
 

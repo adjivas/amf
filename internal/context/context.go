@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	eir_enum "github.com/free5gc/amf/internal/eir"
@@ -72,7 +73,7 @@ type AMFContext struct {
 	NfId                         string
 	Name                         string
 	NfService                    map[models.ServiceName]models.NrfNfManagementNfService // nfservice that amf support
-	EIRRegistrationInfo          EIRRegistrationInfo
+	EIRRegistrationInfo          atomic.Value
 	EIRChecking                  eir_enum.EirChecking
 	UriScheme                    models.UriScheme
 	BindingIP                    netip.Addr
@@ -610,10 +611,23 @@ func (context *AMFContext) Reset() {
 	context.NrfUri = ""
 	context.NrfCertPem = ""
 	context.OAuth2Required = false
-	context.EIRRegistrationInfo = EIRRegistrationInfo{
+	context.EIRRegistrationInfo.Store(EIRRegistrationInfo{
 		NfInstanceUri: "",
 		EIRApiPrefix:  "",
+	})
+}
+
+func (c *AMFContext) GetEirRegistrationInfo() EIRRegistrationInfo {
+	eirRegistrationInfo := c.EIRRegistrationInfo.Load()
+	if eirRegistrationInfo == nil {
+		eirRegistrationInfo := EIRRegistrationInfo{
+			NfInstanceUri: "",
+			EIRApiPrefix:  "",
+		}
+		c.EIRRegistrationInfo.Store(eirRegistrationInfo)
+		return eirRegistrationInfo
 	}
+	return eirRegistrationInfo.(EIRRegistrationInfo)
 }
 
 // Create new AMF context

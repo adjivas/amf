@@ -309,7 +309,8 @@ func SecurityMode(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
 		}
 
 		if eirChecking := amfUe.ServingAMF().EIRChecking; eirChecking != eir_enum.EIRDisabled {
-			eirResponseData, eirError := consumer.GetConsumer().GetEquipmentStatus(amfUe.ServingAMF().EIRRegistrationInfo.EIRApiPrefix, amfUe.Pei)
+			eirRegistrationInfo := amfUe.ServingAMF().GetEirRegistrationInfo()
+			eirResponseData, eirError := consumer.GetConsumer().GetEquipmentStatus(eirRegistrationInfo.EIRApiPrefix, amfUe.Pei)
 
 			if eirChecking == eir_enum.EIRMandatory && eirError != nil {
 				amfUe.GmmLog.Errorf("IMEI mandatory mode rejects the user equipment %s with the EIR error %s", amfUe.Pei, eirError)
