@@ -613,7 +613,8 @@ func (context *AMFContext) Reset() {
 	context.EIRRegistrationInfo = EIRRegistrationInfo{
 		NfInstanceUri: "",
 		EIRApiPrefix:  "",
-	}}
+	}
+}
 
 // Create new AMF context
 func GetSelf() *AMFContext {

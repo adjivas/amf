@@ -1,16 +1,16 @@
 package consumer
 
 import (
-	"sync"
 	"errors"
+	"sync"
 
-	"github.com/free5gc/amf/internal/logger"
-	"github.com/free5gc/openapi"
-	"github.com/free5gc/openapi/models"
-	"github.com/free5gc/amf/pkg/factory"
-	Nnrf_NFDiscovery "github.com/free5gc/openapi/nrf/NFDiscovery"
-	Neir_EIRSelection "github.com/free5gc/openapi/eir/EIRService"
 	amf_context "github.com/free5gc/amf/internal/context"
+	"github.com/free5gc/amf/internal/logger"
+	"github.com/free5gc/amf/pkg/factory"
+	"github.com/free5gc/openapi"
+	Neir_EIRSelection "github.com/free5gc/openapi/eir/EIRService"
+	"github.com/free5gc/openapi/models"
+	Nnrf_NFDiscovery "github.com/free5gc/openapi/nrf/NFDiscovery"
 )
 
 type neirService struct {

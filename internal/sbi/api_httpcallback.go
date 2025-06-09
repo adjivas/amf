@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	amf_context "github.com/free5gc/amf/internal/context"
-	"github.com/free5gc/amf/internal/sbi/consumer"
 	"github.com/free5gc/amf/internal/logger"
+	"github.com/free5gc/amf/internal/sbi/consumer"
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/gin-gonic/gin"
@@ -341,7 +341,7 @@ func (s *Server) HTTPEventEir(c *gin.Context) {
 		eirRegistrationInfo, err := consumer.SearchEirInstance(s.Consumer())
 		if err != nil {
 			logger.MainLog.Warnf("Search Eir instance failed %+v", err)
-			break 
+			break
 		}
 		logger.InitLog.Infof("Select the Eir instance [%+v] from [%+v]", eirRegistrationInfo.EIRApiPrefix, eirRegistrationInfo.NfInstanceUri)
 		s.ServerAmf.Context().EIRRegistrationInfo = eirRegistrationInfo
