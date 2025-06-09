@@ -610,9 +610,10 @@ func (context *AMFContext) Reset() {
 	context.NrfUri = ""
 	context.NrfCertPem = ""
 	context.OAuth2Required = false
-	context.EIRRegistrationInfo.EIRApiPrefix = ""
-	context.EIRRegistrationInfo.NfInstanceUri = ""
-}
+	context.EIRRegistrationInfo = EIRRegistrationInfo{
+		NfInstanceUri: "",
+		EIRApiPrefix:  "",
+	}}
 
 // Create new AMF context
 func GetSelf() *AMFContext {
