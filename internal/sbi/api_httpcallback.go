@@ -340,6 +340,10 @@ func (s *Server) HTTPEventEir(c *gin.Context) {
 			logger.EIRLog.Warnf("This EIR notification is ignored because the AMF has the %+v EIR", s.ServerAmf.Context().EIRRegistrationInfo.NfInstanceUri)
 			break
 		}
+		if requestNotificationData.NfProfile == nil {
+			logger.EIRLog.Warnf("This EIR notification is ignored because it's NfProfile is empty [%+v]", s.ServerAmf.Context().EIRRegistrationInfo.NfInstanceUri)
+			break
+		}
 		uri, errPrefix := openapi.GetManagementNfUri(requestNotificationData.NfProfile)
 		if errPrefix != nil {
 			logger.EIRLog.Warnf("The EIR notification is ignored because it's NfProfile is incorrect [%+v]", errPrefix)
