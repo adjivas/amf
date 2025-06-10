@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	eir_enum "github.com/free5gc/amf/internal/eir"
 	"github.com/free5gc/amf/internal/context"
 	gmm_common "github.com/free5gc/amf/internal/gmm/common"
 	gmm_message "github.com/free5gc/amf/internal/gmm/message"
@@ -2257,6 +2258,17 @@ func HandleRegistrationComplete(ue *context.AmfUe, accessType models.AccessType,
 	}, logger.GmmLog)
 }
 
+func RejectEir(amfUe *context.AmfUe, state *fsm.State, accessType models.AccessType) {
+	gmm_message.SendRegistrationReject(amfUe.RanUe[accessType], nasMessage.Cause5GMMUEIdentityCannotBeDerivedByTheNetwork, "")
+	err := GmmFSM.SendEvent(state, SecurityModeFailEvent, fsm.ArgsType{
+		ArgAmfUe:      amfUe,
+		ArgAccessType: accessType,
+	}, logger.GmmLog)
+	if err != nil {
+		logger.GmmLog.Errorln(err)
+	}
+}
+
 // TS 33.501 6.7.2
 func HandleSecurityModeComplete(ue *context.AmfUe, anType models.AccessType, procedureCode int64,
 	securityModeComplete *nasMessage.SecurityModeComplete,
@@ -2283,6 +2295,24 @@ func HandleSecurityModeComplete(ue *context.AmfUe, anType models.AccessType, pro
 			ue.Pei = pei
 		}
 	}
+
+	if eirChecking := ue.ServingAMF().EIRChecking; eirChecking != eir_enum.EIRDisabled {
+		eirRegistrationInfo := ue.ServingAMF().GetEirRegistrationInfo()
+		eirResponseData, eirError := consumer.GetConsumer().GetEquipmentStatus(eirRegistrationInfo.EIRApiPrefix, ue.Supi)
+
+		if eirChecking == eir_enum.EIRMandatory && eirError != nil {
+			ue.GmmLog.Errorf("IMEI mandatory mode rejects the user equipment [%s] with the EIR error [%s]", ue.Supi, eirError)
+			gmm_message.SendRegistrationReject(ue.RanUe[anType], nasMessage.Cause5GMMUEIdentityCannotBeDerivedByTheNetwork, "")
+			RejectEir(ue, ue.State[anType], anType)
+			return fmt.Errorf("EIR checks failed with [%s]", eirError)
+		} else if eirResponseData != nil && eir_enum.Str2EirEquipmentStatus(eirResponseData.Status) == eir_enum.EIRBlacklisted {
+			ue.GmmLog.Warnf("IMEI [%s] mode rejects the user equipment [%s] by the EIR", eir_enum.EirChecking2Str(eirChecking), ue.Supi)
+			gmm_message.SendRegistrationReject(ue.RanUe[anType], nasMessage.Cause5GMMIllegalUE, "")
+			RejectEir(ue, ue.State[anType], anType)
+			return fmt.Errorf("EIR checks failed with blacklisted")
+		}
+	}
+
 	// TODO: AMF shall set the NAS COUNTs to zero if horizontal derivation of KAMF is performed
 	if securityModeComplete.NASMessageContainer != nil {
 		contents := securityModeComplete.NASMessageContainer.GetNASMessageContainerContents()

@@ -2,7 +2,6 @@ package gmm
 
 import (
 	amf_context "github.com/free5gc/amf/internal/context"
-	eir_enum "github.com/free5gc/amf/internal/eir"
 	gmm_common "github.com/free5gc/amf/internal/gmm/common"
 	gmm_message "github.com/free5gc/amf/internal/gmm/message"
 	"github.com/free5gc/amf/internal/logger"
@@ -306,33 +305,6 @@ func SecurityMode(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
 		default:
 			amfUe.GmmLog.Errorf("state mismatch: receieve gmm message[message type 0x%0x] at %s state",
 				gmmMessage.GetMessageType(), state.Current())
-		}
-
-		if eirChecking := amfUe.ServingAMF().EIRChecking; eirChecking != eir_enum.EIRDisabled {
-			eirRegistrationInfo := amfUe.ServingAMF().GetEirRegistrationInfo()
-			eirResponseData, eirError := consumer.GetConsumer().GetEquipmentStatus(eirRegistrationInfo.EIRApiPrefix, amfUe.Pei)
-
-			if eirChecking == eir_enum.EIRMandatory && eirError != nil {
-				amfUe.GmmLog.Errorf("IMEI mandatory mode rejects the user equipment %s with the EIR error %s", amfUe.Pei, eirError)
-				gmm_message.SendRegistrationReject(amfUe.RanUe[accessType], nasMessage.Cause5GMMUEIdentityCannotBeDerivedByTheNetwork, "")
-				err := GmmFSM.SendEvent(state, SecurityModeFailEvent, fsm.ArgsType{
-					ArgAmfUe:      amfUe,
-					ArgAccessType: accessType,
-				}, logger.GmmLog)
-				if err != nil {
-					logger.GmmLog.Errorln(err)
-				}
-			} else if eirResponseData != nil && eir_enum.Str2EirEquipmentStatus(eirResponseData.Status) == eir_enum.EIRBlacklisted {
-				amfUe.GmmLog.Warnf("IMEI %s mode rejects the user equipment %s by the EIR", eir_enum.EirChecking2Str(eirChecking), amfUe.Pei)
-				gmm_message.SendRegistrationReject(amfUe.RanUe[accessType], nasMessage.Cause5GMMIllegalUE, "")
-				err := GmmFSM.SendEvent(state, SecurityModeFailEvent, fsm.ArgsType{
-					ArgAmfUe:      amfUe,
-					ArgAccessType: accessType,
-				}, logger.GmmLog)
-				if err != nil {
-					logger.GmmLog.Errorln(err)
-				}
-			}
 		}
 
 	case SecurityModeSuccessEvent:
