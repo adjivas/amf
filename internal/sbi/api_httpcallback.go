@@ -285,8 +285,8 @@ func (s *Server) DeregistrationNotificationProcedure(ue *amf_context.AmfUe, dere
 }
 
 func (s *Server) HTTPEventEir(c *gin.Context) {
-	// s.ServerAmf.Context().Lock()
-	// defer s.ServerAmf.Context().Unlock()
+	s.ServerAmf.Context().Lock()
+	defer s.ServerAmf.Context().Unlock()
 
 	var requestNotificationData models.NrfNfManagementNotificationData
 
