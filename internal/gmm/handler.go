@@ -2258,11 +2258,11 @@ func HandleRegistrationComplete(ue *context.AmfUe, accessType models.AccessType,
 	}, logger.GmmLog)
 }
 
-func RejectEir(amfUe *context.AmfUe, state *fsm.State, accessType models.AccessType) {
-	gmm_message.SendRegistrationReject(amfUe.RanUe[accessType], nasMessage.Cause5GMMUEIdentityCannotBeDerivedByTheNetwork, "")
-	err := GmmFSM.SendEvent(state, SecurityModeFailEvent, fsm.ArgsType{
-		ArgAmfUe:      amfUe,
-		ArgAccessType: accessType,
+func RejectEir(ue *context.AmfUe, anType models.AccessType) {
+	gmm_message.SendRegistrationReject(ue.RanUe[anType], nasMessage.Cause5GMMIllegalME, "")
+	err := GmmFSM.SendEvent(ue.State[anType], SecurityModeFailEvent, fsm.ArgsType{
+		ArgAmfUe:      ue,
+		ArgAccessType: anType,
 	}, logger.GmmLog)
 	if err != nil {
 		logger.GmmLog.Errorln(err)
@@ -2303,12 +2303,12 @@ func HandleSecurityModeComplete(ue *context.AmfUe, anType models.AccessType, pro
 		if eirChecking == eir_enum.EIRMandatory && eirError != nil {
 			ue.GmmLog.Errorf("IMEI mandatory mode rejects the user equipment [%s] with the EIR error [%s]", ue.Supi, eirError)
 			gmm_message.SendRegistrationReject(ue.RanUe[anType], nasMessage.Cause5GMMUEIdentityCannotBeDerivedByTheNetwork, "")
-			RejectEir(ue, ue.State[anType], anType)
+			RejectEir(ue, anType)
 			return fmt.Errorf("EIR checks failed with [%s]", eirError)
 		} else if eirResponseData != nil && eir_enum.Str2EirEquipmentStatus(eirResponseData.Status) == eir_enum.EIRBlacklisted {
 			ue.GmmLog.Warnf("IMEI [%s] mode rejects the user equipment [%s] by the EIR", eir_enum.EirChecking2Str(eirChecking), ue.Supi)
-			gmm_message.SendRegistrationReject(ue.RanUe[anType], nasMessage.Cause5GMMIllegalUE, "")
-			RejectEir(ue, ue.State[anType], anType)
+			gmm_message.SendRegistrationReject(ue.RanUe[anType], nasMessage.Cause5GMMIllegalME, "")
+			RejectEir(ue, anType)
 			return fmt.Errorf("EIR checks failed with blacklisted")
 		}
 	}
