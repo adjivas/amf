@@ -289,7 +289,7 @@ func SecurityMode(state *fsm.State, event fsm.EventType, args fsm.ArgsType) {
 			}
 		case nas.MsgTypeSecurityModeReject:
 			if err := HandleSecurityModeReject(amfUe, accessType, gmmMessage.SecurityModeReject); err != nil {
-				logger.GmmLog.Errorln(err)
+				logger.GmmLog.Warnln(err)
 			}
 			err := GmmFSM.SendEvent(state, SecurityModeFailEvent, fsm.ArgsType{
 				ArgAmfUe:      amfUe,
