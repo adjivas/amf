@@ -5,6 +5,7 @@ import (
 
 	amf_context "github.com/free5gc/amf/internal/context"
 	"github.com/free5gc/amf/internal/logger"
+	"github.com/free5gc/amf/internal/sbi/consumer"
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/gin-gonic/gin"
@@ -48,6 +49,12 @@ func (s *Server) getHttpCallBackRoutes() []Route {
 			Method:  http.MethodPost,
 			Pattern: "/deregistration/:ueid",
 			APIFunc: s.HTTPHandleDeregistrationNotification,
+		},
+		{
+			Name:    "EventEir",
+			Method:  http.MethodPost,
+			Pattern: "/nnrf-nfm/v1",
+			APIFunc: s.HTTPEventEir,
 		},
 	}
 }
@@ -275,4 +282,97 @@ func (s *Server) DeregistrationNotificationProcedure(ue *amf_context.AmfUe, dere
 	ue.Remove()
 
 	return nil, nil
+}
+
+func (s *Server) HTTPEventEir(c *gin.Context) {
+	s.ServerAmf.Context().Lock()
+	defer s.ServerAmf.Context().Unlock()
+
+	var requestNotificationData models.NrfNfManagementNotificationData
+
+	requestBody, err := c.GetRawData()
+	if err != nil {
+		problemDetail := models.ProblemDetails{
+			Title:  "System failure",
+			Status: http.StatusInternalServerError,
+			Detail: err.Error(),
+			Cause:  "SYSTEM_FAILURE",
+		}
+		logger.EIRLog.Errorf("Get Request Body error: %+v", err)
+		c.JSON(http.StatusInternalServerError, problemDetail)
+		return
+	}
+
+	err = openapi.Deserialize(&requestNotificationData, requestBody, "application/json")
+	if err != nil {
+		problemDetail := "[Request Body] " + err.Error()
+		rsp := models.ProblemDetails{
+			Title:  "Malformed request syntax",
+			Status: http.StatusBadRequest,
+			Detail: problemDetail,
+		}
+		logger.EIRLog.Errorln(problemDetail)
+		c.JSON(http.StatusBadRequest, rsp)
+		return
+	}
+
+	if requestNotificationData.NfInstanceUri == "" {
+		logger.EIRLog.Warnf("AMF receives malformed [%+v] EIR notification: [%+v]", requestNotificationData.Event, requestNotificationData)
+		c.JSON(http.StatusNoContent, nil)
+	}
+
+	eirRegistrationInfo := s.ServerAmf.Context().GetEirRegistrationInfo()
+	switch event := requestNotificationData.Event; event {
+	case "NF_DEREGISTERED":
+		logger.EIRLog.Infof("AMF receives %+v deregistration EIR notification", requestNotificationData.NfInstanceUri)
+		if eirRegistrationInfo.NfInstanceUri == "" {
+			logger.EIRLog.Warnf("This EIR notification is ignored because the AMF doesn't have a registered EIR")
+			break
+		}
+		if eirRegistrationInfo.NfInstanceUri != requestNotificationData.NfInstanceUri {
+			logger.EIRLog.Warnf("This EIR notification is ignored because the AMF has the %+v EIR", eirRegistrationInfo.NfInstanceUri)
+			break
+		}
+		s.ServerAmf.Context().EIRRegistrationInfo.Store(amf_context.EIRRegistrationInfo{
+			NfInstanceUri: "",
+			EIRApiPrefix:  "",
+		})
+		logger.EIRLog.Debug("The AMF's EIR is removed")
+
+		eirRegistrationInfo, err := consumer.SearchEirInstance(s.Consumer())
+		if err != nil {
+			logger.MainLog.Warnf("Search Eir instance failed %+v", err)
+			break
+		}
+		logger.InitLog.Infof("Select the Eir instance [%+v]", eirRegistrationInfo.EIRApiPrefix)
+		s.ServerAmf.Context().EIRRegistrationInfo.Store(eirRegistrationInfo)
+	case "NF_REGISTERED":
+		logger.EIRLog.Infof("AMF receives %+v registration EIR notification", requestNotificationData.NfInstanceUri)
+		if eirRegistrationInfo.NfInstanceUri != "" {
+			logger.EIRLog.Warnf("This EIR notification is ignored because the AMF has the %+v EIR", eirRegistrationInfo.NfInstanceUri)
+			break
+		}
+		if requestNotificationData.NfProfile == nil {
+			logger.EIRLog.Warnf("This EIR notification is ignored because it's NfProfile is empty [%+v]", eirRegistrationInfo.NfInstanceUri)
+			break
+		}
+		eirUri, errPrefix := openapi.GetManagementNfUri(requestNotificationData.NfProfile)
+		if errPrefix != nil {
+			logger.EIRLog.Warnf("The EIR notification is ignored because it's NfProfile is incorrect [%+v]", errPrefix)
+			break
+		}
+		if eirRegistrationInfo.NfInstanceUri != "" {
+			logger.EIRLog.Infof("The AMF's EIR is set to: [%+v] from [%+v]", eirUri, eirRegistrationInfo.NfInstanceUri)
+		} else {
+			logger.EIRLog.Infof("The AMF's EIR is set to: [%+v]", eirUri)
+		}
+		s.ServerAmf.Context().EIRRegistrationInfo.Store(amf_context.EIRRegistrationInfo{
+			NfInstanceUri: requestNotificationData.NfInstanceUri,
+			EIRApiPrefix:  eirUri,
+		})
+	default:
+		logger.EIRLog.Warnf("This EIR notification is ignored because the AMF has the %+v EIR", eirRegistrationInfo.NfInstanceUri)
+	}
+
+	c.JSON(http.StatusNoContent, nil)
 }

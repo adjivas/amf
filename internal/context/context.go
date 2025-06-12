@@ -11,8 +11,10 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
+	eir_enum "github.com/free5gc/amf/internal/eir"
 	"github.com/free5gc/amf/internal/logger"
 	"github.com/free5gc/amf/pkg/factory"
 	"github.com/free5gc/nas/nasConvert"
@@ -52,6 +54,11 @@ type NFContext interface {
 
 var _ NFContext = &AMFContext{}
 
+type EIRRegistrationInfo struct {
+	EIRApiPrefix  string
+	NfInstanceUri string
+}
+
 type AMFContext struct {
 	EventSubscriptionIDGenerator *idgenerator.IDGenerator
 	EventSubscriptions           sync.Map
@@ -66,6 +73,8 @@ type AMFContext struct {
 	NfId                         string
 	Name                         string
 	NfService                    map[models.ServiceName]models.NrfNfManagementNfService // nfservice that amf support
+	EIRRegistrationInfo          atomic.Value
+	EIRChecking                  eir_enum.EirChecking
 	UriScheme                    models.UriScheme
 	BindingIP                    netip.Addr
 	SBIPort                      int
@@ -95,6 +104,8 @@ type AMFContext struct {
 	Locality string
 
 	OAuth2Required bool
+
+	sync.RWMutex
 }
 
 type AMFContextEventSubscription struct {
@@ -115,6 +126,8 @@ func InitAmfContext(context *AMFContext) {
 	logger.UtilLog.Infof("amfconfig Info: Version[%s]", config.GetVersion())
 	configuration := config.Configuration
 	context.NfId = uuid.New().String()
+
+	context.EIRChecking = eir_enum.Str2EirChecking(configuration.Imei.Checking)
 	sbi := configuration.Sbi
 	if configuration.AmfName != "" {
 		context.Name = configuration.AmfName
@@ -598,6 +611,23 @@ func (context *AMFContext) Reset() {
 	context.NrfUri = ""
 	context.NrfCertPem = ""
 	context.OAuth2Required = false
+	context.EIRRegistrationInfo.Store(EIRRegistrationInfo{
+		NfInstanceUri: "",
+		EIRApiPrefix:  "",
+	})
+}
+
+func (c *AMFContext) GetEirRegistrationInfo() EIRRegistrationInfo {
+	eirRegistrationInfo := c.EIRRegistrationInfo.Load()
+	if eirRegistrationInfo == nil {
+		eirRegistrationInfo := EIRRegistrationInfo{
+			NfInstanceUri: "",
+			EIRApiPrefix:  "",
+		}
+		c.EIRRegistrationInfo.Store(eirRegistrationInfo)
+		return eirRegistrationInfo
+	}
+	return eirRegistrationInfo.(EIRRegistrationInfo)
 }
 
 // Create new AMF context

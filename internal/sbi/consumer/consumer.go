@@ -4,6 +4,7 @@ import (
 	"github.com/free5gc/amf/pkg/app"
 	Namf_Communication "github.com/free5gc/openapi/amf/Communication"
 	Nausf_UEAuthentication "github.com/free5gc/openapi/ausf/UEAuthentication"
+	Neir_EIRSelection "github.com/free5gc/openapi/eir/EIRService"
 	Nnrf_NFDiscovery "github.com/free5gc/openapi/nrf/NFDiscovery"
 	Nnrf_NFManagement "github.com/free5gc/openapi/nrf/NFManagement"
 	Nnssf_NSSelection "github.com/free5gc/openapi/nssf/NSSelection"
@@ -30,6 +31,7 @@ type Consumer struct {
 	*nsmfService
 	*nudmService
 	*nausfService
+	*neirService
 }
 
 func GetConsumer() *Consumer {
@@ -77,6 +79,12 @@ func NewConsumer(amf ConsumerAmf) (*Consumer, error) {
 		consumer:                c,
 		UEAuthenticationClients: make(map[string]*Nausf_UEAuthentication.APIClient),
 	}
+
+	c.neirService = &neirService{
+		consumer:            c,
+		EIRSelectionClients: make(map[string]*Neir_EIRSelection.APIClient),
+	}
+
 	consumer = c
 	return c, nil
 }

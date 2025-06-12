@@ -24,6 +24,7 @@ const (
 	AmfSbiDefaultPort         = 8000
 	AmfSbiDefaultScheme       = "https"
 	AmfDefaultNrfUri          = "https://127.0.0.10:8000"
+	AmfEmeiDefaultChecking    = "disabled"
 	sctpDefaultNumOstreams    = 3
 	sctpDefaultMaxInstreams   = 5
 	sctpDefaultMaxAttempts    = 2
@@ -66,6 +67,7 @@ type Configuration struct {
 	AmfName                string            `yaml:"amfName,omitempty" valid:"required, type(string)"`
 	NgapIpList             []string          `yaml:"ngapIpList,omitempty" valid:"required"`
 	NgapPort               int               `yaml:"ngapPort,omitempty" valid:"optional,port"`
+	Imei                   *Imei             `yaml:"imei,omitempty" valid:"optional"`
 	Sbi                    *Sbi              `yaml:"sbi,omitempty" valid:"required"`
 	ServiceNameList        []string          `yaml:"serviceNameList,omitempty" valid:"required"`
 	ServedGumaiList        []models.Guami    `yaml:"servedGuamiList,omitempty" valid:"required"`
@@ -112,6 +114,15 @@ func (c *Configuration) validate() (bool, error) {
 		if len(errs) > 0 {
 			return false, error(errs)
 		}
+	}
+
+	if c.Imei == nil {
+		c.Imei = &Imei{
+			Checking: AmfEmeiDefaultChecking,
+		}
+	}
+	if _, err := c.Imei.validate(); err != nil {
+		return false, err
 	}
 
 	if c.Sbi != nil {
@@ -285,6 +296,15 @@ func (c *Configuration) validate() (bool, error) {
 	return true, nil
 }
 
+type Imei struct {
+	Checking string `yaml:"checking,omitempty" valid:"in(enabled|disabled|mandatory),required"`
+}
+
+func (s *Imei) validate() (bool, error) {
+	result, err := govalidator.ValidateStruct(s)
+	return result, err
+}
+
 type Sbi struct {
 	Scheme       string `yaml:"scheme" valid:"in(http|https),optional"`
 	RegisterIPv4 string `yaml:"registerIPv4,omitempty" valid:"host,optional"` // IP that is registered at NRF.
@@ -296,7 +316,7 @@ type Sbi struct {
 }
 
 func (s *Sbi) validate() (bool, error) {
-	// Set a default Schme if the Configuration does not provides one
+	// Set a default Scheme if the Configuration does not provides one
 	if s.Scheme == "" {
 		s.Scheme = AmfSbiDefaultScheme
 	}

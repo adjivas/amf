@@ -21,6 +21,7 @@ var (
 	ProducerLog *logrus.Entry
 	SBILog      *logrus.Entry
 	LocationLog *logrus.Entry
+	EIRLog      *logrus.Entry
 	CommLog     *logrus.Entry
 	CallbackLog *logrus.Entry
 	UtilLog     *logrus.Entry
@@ -56,6 +57,7 @@ func init() {
 	ProducerLog = NfLog.WithField(logger_util.FieldCategory, "Producer")
 	SBILog = NfLog.WithField(logger_util.FieldCategory, "SBI")
 	LocationLog = NfLog.WithField(logger_util.FieldCategory, "Location")
+	EIRLog = NfLog.WithField(logger_util.FieldCategory, "EIR")
 	CommLog = NfLog.WithField(logger_util.FieldCategory, "Comm")
 	CallbackLog = NfLog.WithField(logger_util.FieldCategory, "Callback")
 	UtilLog = NfLog.WithField(logger_util.FieldCategory, "Util")
