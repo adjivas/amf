@@ -2298,14 +2298,14 @@ func HandleSecurityModeComplete(ue *context.AmfUe, anType models.AccessType, pro
 
 	if eirChecking := ue.ServingAMF().EIRChecking; eirChecking != eir_enum.EIRDisabled {
 		eirRegistrationInfo := ue.ServingAMF().GetEirRegistrationInfo()
-		eirResponseData, eirError := consumer.GetConsumer().GetEquipmentStatus(eirRegistrationInfo.EIRApiPrefix, ue.Supi)
+		eirResponseData, eirError := consumer.GetConsumer().GetEquipmentStatus(eirRegistrationInfo.EIRApiPrefix, ue.Pei)
 
 		if eirChecking == eir_enum.EIRMandatory && eirError != nil {
-			ue.GmmLog.Errorf("IMEI mandatory mode rejects the user equipment [%s] with the EIR error [%s]", ue.Supi, eirError)
+			ue.GmmLog.Errorf("IMEI mandatory mode rejects the user equipment [%s] with the EIR error [%s]", ue.Pei, eirError)
 			RejectEir(ue, anType, nasMessage.Cause5GMMProtocolErrorUnspecified)
 			return fmt.Errorf("EIR checks failed with [%s]", eirError)
 		} else if eirResponseData != nil && eir_enum.Str2EirEquipmentStatus(eirResponseData.Status) == eir_enum.EIRBlacklisted {
-			ue.GmmLog.Warnf("IMEI [%s] mode rejects the user equipment [%s] by the EIR", eir_enum.EirChecking2Str(eirChecking), ue.Supi)
+			ue.GmmLog.Warnf("IMEI [%s] mode rejects the user equipment [%s] by the EIR", eir_enum.EirChecking2Str(eirChecking), ue.Pei)
 			RejectEir(ue, anType, nasMessage.Cause5GMMIllegalME)
 			return errors.New("EIR checks failed with blacklisted")
 		}
