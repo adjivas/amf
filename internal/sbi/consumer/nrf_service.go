@@ -15,6 +15,7 @@ import (
 	"github.com/free5gc/openapi/models"
 	Nnrf_NFDiscovery "github.com/free5gc/openapi/nrf/NFDiscovery"
 	Nnrf_NFManagement "github.com/free5gc/openapi/nrf/NFManagement"
+	sbi_metrics "github.com/free5gc/util/metrics/sbi"
 )
 
 type nnrfService struct {
@@ -40,6 +41,7 @@ func (s *nnrfService) getNFManagementClient(uri string) *Nnrf_NFManagement.APICl
 
 	configuration := Nnrf_NFManagement.NewConfiguration()
 	configuration.SetBasePath(uri)
+	configuration.SetMetrics(sbi_metrics.SbiMetricHook)
 	client = Nnrf_NFManagement.NewAPIClient(configuration)
 
 	s.nfMngmntMu.RUnlock()
@@ -62,6 +64,7 @@ func (s *nnrfService) getNFDiscClient(uri string) *Nnrf_NFDiscovery.APIClient {
 
 	configuration := Nnrf_NFDiscovery.NewConfiguration()
 	configuration.SetBasePath(uri)
+	configuration.SetMetrics(sbi_metrics.SbiMetricHook)
 	client = Nnrf_NFDiscovery.NewAPIClient(configuration)
 
 	s.nfDiscMu.RUnlock()
@@ -119,7 +122,7 @@ func (s *nnrfService) SearchUdmSdmInstance(
 	ue.NudmSDMUri = sdmUri
 	if ue.NudmSDMUri == "" {
 		err := fmt.Errorf("AMF can not select an UDM by NRF")
-		logger.ConsumerLog.Errorf(err.Error())
+		logger.ConsumerLog.Error(err)
 		return err
 	}
 	return nil
@@ -218,11 +221,15 @@ func (s *nnrfService) BuildNFInstance(context *amf_context.AMFContext) (
 	}
 	amfInfo.TaiList = context.SupportTaiLists
 	profile.AmfInfo = &amfInfo
-	if context.RegisterIPv4 == "" {
+	if !context.RegisterIP.IsValid() {
 		err = fmt.Errorf("AMF Address is empty")
 		return profile, err
 	}
-	profile.Ipv4Addresses = append(profile.Ipv4Addresses, context.RegisterIPv4)
+	if context.RegisterIP.Is6() {
+		profile.Ipv6Addresses = append(profile.Ipv6Addresses, context.RegisterIP.String())
+	} else if context.RegisterIP.Is4() {
+		profile.Ipv4Addresses = append(profile.Ipv4Addresses, context.RegisterIP.String())
+	}
 	service := []models.NrfNfManagementNfService{}
 	for _, nfService := range context.NfService {
 		service = append(service, nfService)
@@ -232,7 +239,7 @@ func (s *nnrfService) BuildNFInstance(context *amf_context.AMFContext) (
 	}
 
 	defaultNotificationSubscription := models.DefaultNotificationSubscription{
-		CallbackUri:      fmt.Sprintf("%s"+factory.AmfCallbackResUriPrefix+"/n1-message-notify", context.GetIPv4Uri()),
+		CallbackUri:      fmt.Sprintf("%s"+factory.AmfCallbackResUriPrefix+"/n1-message-notify", context.GetIPUri()),
 		NotificationType: models.NrfNfManagementNotificationType_N1_MESSAGES,
 		N1MessageClass:   models.N1MessageClass__5_GMM,
 	}

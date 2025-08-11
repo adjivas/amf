@@ -455,7 +455,7 @@ func BuildUEContextReleaseCommand(
 	}
 	switch causePresent {
 	case ngapType.CausePresentNothing:
-		return nil, fmt.Errorf("Cause Present is Nothing")
+		return nil, fmt.Errorf("cause present is nothing")
 	case ngapType.CausePresentRadioNetwork:
 		ngapCause.RadioNetwork = new(ngapType.CauseRadioNetwork)
 		ngapCause.RadioNetwork.Value = cause
@@ -472,7 +472,7 @@ func BuildUEContextReleaseCommand(
 		ngapCause.Misc = new(ngapType.CauseMisc)
 		ngapCause.Misc.Value = cause
 	default:
-		return nil, fmt.Errorf("Cause Present is Unknown")
+		return nil, fmt.Errorf("cause present is unknown")
 	}
 	ie.Value.Cause = &ngapCause
 
@@ -2243,7 +2243,7 @@ func BuildPaging(
 
 	taiListForPaging := ie.Value.TAIListForPaging
 	if ue.RegistrationArea[models.AccessType__3_GPP_ACCESS] == nil {
-		err = fmt.Errorf("Registration Area of Ue[%s] is empty", ue.Supi)
+		err = fmt.Errorf("registration area of Ue[%s] is empty", ue.Supi)
 		return nil, err
 	} else {
 		for _, tai := range ue.RegistrationArea[models.AccessType__3_GPP_ACCESS] {
@@ -3054,7 +3054,7 @@ func BuildAMFConfigurationUpdate(tNLassociationUsage ngapType.TNLAssociationUsag
 		CPTransportLayerInformationPresentEndpointIPAddress
 	aMFTNLAssociationToAddItem.AMFTNLAssociationAddress.EndpointIPAddress = new(ngapType.TransportLayerAddress)
 	*aMFTNLAssociationToAddItem.AMFTNLAssociationAddress.EndpointIPAddress = ngapConvert.
-		IPAddressToNgap(amfSelf.RegisterIPv4, amfSelf.HttpIPv6Address)
+		IPAddressToNgap(amfSelf.RegisterIP.String(), amfSelf.HttpIPv6Address)
 
 	//	AMF TNL Association Usage[optional]
 	if aMFTNLAssociationToAddItem.TNLAssociationUsage != nil {
@@ -3083,7 +3083,7 @@ func BuildAMFConfigurationUpdate(tNLassociationUsage ngapType.TNLAssociationUsag
 		CPTransportLayerInformationPresentEndpointIPAddress
 	aMFTNLAssociationToRemoveItem.AMFTNLAssociationAddress.EndpointIPAddress = new(ngapType.TransportLayerAddress)
 	*aMFTNLAssociationToRemoveItem.AMFTNLAssociationAddress.EndpointIPAddress = ngapConvert.
-		IPAddressToNgap(amfSelf.RegisterIPv4, amfSelf.HttpIPv6Address)
+		IPAddressToNgap(amfSelf.RegisterIP.String(), amfSelf.HttpIPv6Address)
 
 	aMFTNLAssociationToRemoveList.List = append(aMFTNLAssociationToRemoveList.List, aMFTNLAssociationToRemoveItem)
 	aMFConfigurationUpdateIEs.List = append(aMFConfigurationUpdateIEs.List, ie)
@@ -3103,7 +3103,7 @@ func BuildAMFConfigurationUpdate(tNLassociationUsage ngapType.TNLAssociationUsag
 		CPTransportLayerInformationPresentEndpointIPAddress
 	aMFTNLAssociationToUpdateItem.AMFTNLAssociationAddress.EndpointIPAddress = new(ngapType.TransportLayerAddress)
 	*aMFTNLAssociationToUpdateItem.AMFTNLAssociationAddress.EndpointIPAddress = ngapConvert.
-		IPAddressToNgap(amfSelf.RegisterIPv4, amfSelf.HttpIPv6Address)
+		IPAddressToNgap(amfSelf.RegisterIP.String(), amfSelf.HttpIPv6Address)
 
 	//	TNLAssociationUsage in AMFTNLAssociationtoUpdateItem [optional]
 	if aMFTNLAssociationToUpdateItem.TNLAssociationUsage != nil {
